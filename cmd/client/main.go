@@ -12,8 +12,8 @@ import (
 	"go.octolab.org/toolkit/cli/cobra"
 	"go.octolab.org/unsafe"
 
-	"go.octolab.org/ecosystem/tablo/internal/command"
-	"go.octolab.org/ecosystem/tablo/internal/config"
+	"go.octolab.org/toolset/tablo/internal/command"
+	"go.octolab.org/toolset/tablo/internal/config"
 )
 
 const unknown = "unknown"

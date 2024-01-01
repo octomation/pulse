@@ -1,4 +1,4 @@
-module go.octolab.org/ecosystem/tablo
+module go.octolab.org/toolset/tablo
 
 go 1.19
 
