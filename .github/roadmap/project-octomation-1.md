@@ -124,6 +124,7 @@ closedAt: null
 - [ ] octomation/maintainer#50 — command: separate command structure and command execution
 - [ ] octomation/maintainer#51 — di: define service provider to inject it into command for lazy service initialization
 - [ ] octomation/maintainer#522 — github: contribution: lose no contribution at the edges of the monthly slices
+- [ ] [[issue-85]] — core: trend-watch without repeats
 
 ## Done
 
