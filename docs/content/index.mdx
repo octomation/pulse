@@ -1,0 +1,23 @@
+---
+title: All your activity in one view.
+description: pulse is the one point of view to all external activities, starting with GitHub. It is in early development and has no release yet.
+---
+
+import Link from 'next/link'
+
+<div className="home">
+  <section className="hero">
+    <div className="hero-copy">
+      <p className="eyebrow">THE PULSE OF YOUR WORK.</p>
+      <h1>All your activity.<br />In <em>one view.</em></h1>
+      <p className="hero-lead">pulse aims to bring what you do on external services, starting with GitHub, into one place: a service and its client, pulsectl.</p>
+      <div className="hero-actions">
+        <a className="button-primary" href="https://github.com/octomation/pulse">Follow the development <span aria-hidden="true">↗</span></a>
+        <Link className="button-text" href="/changelog/">Changelog <span aria-hidden="true">→</span></Link>
+      </div>
+      <p className="hero-note">Early development · macOS & Linux · Open source, MIT</p>
+    </div>
+  </section>
+
+  <p className="scope-note">pulse has no release yet: there is nothing to install. Its plans are on <a href="https://github.com/octomation/pulse/issues">GitHub</a>.</p>
+</div>

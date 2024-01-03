@@ -1,9 +1,0 @@
-{
-  "v1.0.0": {
-    "title": "v1.0.0",
-    "theme": {
-      "breadcrumb": false,
-      "pagination": false
-    }
-  }
-}
