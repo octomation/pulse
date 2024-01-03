@@ -1,4 +1,3 @@
-.dockerignore   export-ignore
 .gitattributes  export-ignore
 .gitignore      export-ignore
 .gitkeep        export-ignore
@@ -7,13 +6,14 @@
 
 /.github/       export-ignore
 /bin/           export-ignore
+/docs/          export-ignore
 /tools/         export-ignore
 
 Makefile        export-ignore
 Taskfile        export-ignore
 *.md            export-ignore
+/skills/**      -export-ignore
 
-/tests/         export-ignore
 testdata/       export-ignore
 *_test.go       export-ignore
 

@@ -2,7 +2,7 @@
 
 .DEFAULT_GOAL = check
 GIT_HOOKS     = post-merge pre-commit pre-push
-GO_VERSIONS   = 1.19 1.20
+GO_VERSIONS   = 1.27
 
 AT    := @
 ARCH  := $(shell uname -m | tr '[:upper:]' '[:lower:]')
@@ -32,31 +32,29 @@ make-verbose:
 .PHONY: make-verbose
 
 COMMIT  := $(shell git rev-parse --short --verify HEAD)
-RELEASE := $(shell git describe --tags 2>/dev/null | rev | cut -d - -f3- | rev)
+# Only a tagged commit represents a release; a build between tags is dev.
+RELEASE := $(shell git describe --tags --exact-match 2>/dev/null || printf dev)
 
 git-config:
 	$(AT) git config core.autocrlf input
+	$(AT) git config core.hooksPath .github/hooks
 .PHONY: git-config
 
-ifneq (, $(wildcard bin/lib/git/hooks/))
+ifneq (, $(wildcard .github/hooks/))
 ifdef GIT_HOOKS
 
-git-hooks: git-unhook
-	$(AT) for hook in $(GIT_HOOKS); do \
-		cp bin/lib/git/hooks/$$hook .git/hooks/; \
-	done
+# versioned hooks take effect in place, see octomation/makefiles#81
+git-hooks:
+	$(AT) git config --local core.hooksPath .github/hooks
 .PHONY: git-hooks
 
 git-unhook:
-	$(AT) ls .git/hooks \
-	| grep -v .sample \
-	| sed 's|.*|.git/hooks/&|' \
-	| xargs rm -f || true
+	$(AT) git config --local --unset core.hooksPath || true
 .PHONY: git-unhook
 
 define hook_tpl
 git-$(1):
-	$$(AT) bin/lib/git/hooks/$(1)
+	$$(AT) .github/hooks/$(1) < /dev/null
 .PHONY: git-$(1)
 endef
 
@@ -89,10 +87,11 @@ git-rmdir:
 	done
 .PHONY: git-rmdir
 
+FUZZTIME    ?= 10s
 GOBIN       ?= $(PWD)/bin/$(OS)/$(ARCH)
 GOFLAGS     ?= -mod=
-GOPRIVATE   ?= go.octolab.net
-GOPROXY     ?= direct
+GOPRIVATE   ?= go.octolab.org
+GOPROXY     ?= https://proxy.golang.org,direct
 GOTEST      ?= $(shell PATH="$(PATH)" command -v testit)
 GOTESTFLAGS ?=
 GOTRACEBACK ?= all
@@ -100,7 +99,7 @@ LOCAL       ?= $(MODULE)
 MODULE      ?= `go list $(GOFLAGS)`
 PACKAGES    ?= `go list $(GOFLAGS) ./...`
 PATHS       ?= $(shell echo $(PACKAGES) | sed -e "s|$(MODULE)/||g" | sed -e "s|$(MODULE)|$(PWD)/*.go|g")
-TIMEOUT     ?= 1s
+TIMEOUT     ?= 2m
 
 ifeq (, $(GOTEST))
 	GOTEST = go test
@@ -145,7 +144,7 @@ go-verbose:
 
 go-deps-check:
 	$(AT) go mod verify
-	$(AT) govulncheck -tags $(GOTAGS) -test ./...
+	$(AT) govulncheck $(if $(strip $(GOTAGS)),-tags $(GOTAGS)) -test ./...
 	$(AT) if command -v egg >/dev/null; then \
 		egg deps check license; \
 		egg deps check version; \
@@ -203,15 +202,15 @@ go-generate:
 #
 # For more experience see https://jqplay.org, https://stedolan.github.io/jq/.
 go-lint:
-	$(AT) golangci-lint run --enable looppointer ./...
+	$(AT) golangci-lint run ./...
 .PHONY: go-lint
 
 go-pkg:
-	$(AT) open https://pkg.go.dev/$(MODULE)@$(RELEASE)
+	$(AT) open https://pkg.go.dev/$(MODULE)$(if $(filter dev,$(RELEASE)),,@$(RELEASE))
 .PHONY: go-pkg
 
 go-check:
-	$(AT) $(GOTEST) -count=1 -test.run=^$(uuidgen) ./...
+	$(AT) $(GOTEST) -count=1 -test.run=^$$(uuidgen) ./...
 .PHONY: go-check
 
 go-test:
@@ -240,7 +239,7 @@ go-test-with-coverage-report: go-test-with-coverage
 go-integration-test: GOTAGS := $(GOTAGS) integration
 go-integration-test:
 	$(AT) $(GOTEST) -race -tags $(GOTAGS) -timeout $(TIMEOUT) $(GOTESTFLAGS) $(PACKAGES)
-.PHONY: go-test-integration-quick
+.PHONY: go-integration-test
 
 go-integration-test-with-coverage: GOTAGS := $(GOTAGS) integration
 go-integration-test-with-coverage:
@@ -259,8 +258,16 @@ go-integration-test-with-coverage-report: go-integration-test-with-coverage
 	$(AT) go tool cover -html c.out
 .PHONY: go-integration-test-with-coverage-report
 
+# go test fuzzes one target of one package at a time, for FUZZTIME each;
+# the assignments fail the recipe when a listing fails
 go-fuzzing-test:
-	$(AT) $(GOTEST) -fuzz $(PACKAGES)
+	$(AT) packages="$(PACKAGES)"; \
+	for package in $$packages; do \
+		targets="$$(go test -list '^Fuzz' $$package)"; \
+		for target in $$(grep '^Fuzz' <<< "$$targets" || true); do \
+			$(GOTEST) -run='^$$' -fuzz="^$$target\$$" -fuzztime=$(FUZZTIME) $(GOTESTFLAGS) $$package; \
+		done; \
+	done
 .PHONY: go-fuzzing-test
 
 go-fuzzing-test-clean:
@@ -268,13 +275,14 @@ go-fuzzing-test-clean:
 .PHONY: go-fuzzing-test-clean
 
 go-performance-test:
-	$(AT) $(GOTEST) -bench=. -run=^$(uuidgen) $(GOTESTFLAGS) $(PACKAGES)
+	$(AT) $(GOTEST) -bench=. -run=^$$(uuidgen) $(GOTESTFLAGS) $(PACKAGES)
 .PHONY: go-performance-test
 
-# TODO:refactor support relative path
-BINARY  ?= $(GOBIN)/$(shell basename $(MAIN))
+# two binaries, pulse and pulsectl: go build writes each one into the
+# directory BINARY names when it ends with a slash
+BINARY  ?= $(GOBIN)/
 LDFLAGS ?= -ldflags "-s -w -X main.version=$(RELEASE) -X main.commit=$(COMMIT) -X main.date=$(DATE)"
-MAIN    ?= $(MODULE)
+MAIN    ?= $(MODULE)/cmd/...
 
 go-build-env:
 	@echo "DATE:        $(DATE)"
@@ -301,19 +309,39 @@ go-install-clean:
 	$(AT) go clean -cache
 .PHONY: go-install-clean
 
-go-client:
-	$(eval MAIN := ./cmd/client)
-	@true
-.PHONY: go-client
-
-go-server:
-	$(eval MAIN := ./cmd/server)
-	@true
-.PHONY: go-server
-
 go-dist-check:
-	$(AT) goreleaser --clean --skip-publish --snapshot
+	$(AT) goreleaser --clean --skip=publish --snapshot
 .PHONY: go-dist-check
+
+config-vet:
+	$(AT) cue vet -c .github/settings.cue .github/settings.json
+.PHONY: config-vet
+
+# the tool versions the workflows pin follow tools/go.mod, the Go versions go.mod
+tool-pins-check:
+	$(AT) node .github/scripts/tool-pins-check.mjs
+.PHONY: tool-pins-check
+
+doctor:
+	$(AT) node .github/scripts/release.mjs doctor
+.PHONY: doctor
+
+# runs the doctor workflow on main and waits for its result: unlike doctor, it
+# mints the tap and catalog tokens, which proves the App can publish
+workflow-doctor:
+	$(AT) last() { gh run list -w doctor.yml -e workflow_dispatch -L 1 --json databaseId -q '.[0].databaseId'; }; \
+	prev="$$(last)"; \
+	gh workflow run doctor.yml --ref main -f reason="$(or $(REASON),make workflow-doctor)"; \
+	until run="$$(last)" && [ -n "$$run" ] && [ "$$run" != "$$prev" ]; do sleep 3; done; \
+	gh run watch --exit-status "$$run"
+.PHONY: workflow-doctor
+
+release-check: config-vet
+	$(AT) test -n "$(TAG)" || { echo 'usage: git tag vX.Y.Z && make release-check TAG=vX.Y.Z'; exit 2; }
+	$(AT) node .github/scripts/release.mjs check $(TAG) --local
+	$(AT) $(MAKE) go-deps-tidy go-tools-tidy git-check
+	$(AT) $(MAKE) release-config-check
+.PHONY: release-check
 
 go-dist-clean:
 	$(AT) rm -rf dist
@@ -335,7 +363,7 @@ go-tools-check: GOFLAGS = $(TOOLFLAGS)
 go-tools-check:
 	$(AT) cd tools; \
 	go mod verify; \
-	govulncheck -tags $(GOTAGS) -test ./...; \
+	govulncheck tool; \
 	if command -v egg >/dev/null; then \
 		egg deps check license; \
 		egg deps check version; \
@@ -349,9 +377,8 @@ go-tools-fetch:
 .PHONY: go-tools-fetch
 
 go-tools-install: GOFLAGS = $(TOOLFLAGS)
-go-tools-install: GOTAGS = tools
 go-tools-install: go-tools-fetch
-	$(AT) cd tools; go generate -tags $(GOTAGS) tools.go
+	$(AT) cd tools; go install tool
 .PHONY: go-tools-install
 
 go-tools-tidy: GOFLAGS = $(TOOLFLAGS)
@@ -360,20 +387,11 @@ go-tools-tidy:
 	if [[ "`go env GOFLAGS`" =~ -mod=vendor ]]; then go mod vendor; fi
 .PHONY: go-tools-tidy
 
+# modules behind the tool directive are required as indirect,
+# so the tool pattern is the only way to select them
 go-tools-update: GOFLAGS = $(TOOLFLAGS)
-go-tools-update: selector = '{{if not (or .Main .Indirect)}}{{.Path}}{{end}}'
 go-tools-update:
-	$(AT) cd tools; \
-	if command -v egg >/dev/null; then \
-		packages="`egg deps list | tr ' ' '\n'`"; \
-	else \
-		packages="`go list -f $(selector) -m -mod=readonly all`"; \
-	fi; \
-	if [ -z "$$packages" ]; then exit; fi; \
-	for package in $$packages; do \
-		go mod edit -require=$$package@latest; \
-		go mod tidy; \
-	done
+	$(AT) cd tools; go get tool
 	$(AT) $(MAKE) go-tools-tidy go-tools-install
 .PHONY: go-tools-update
 else
@@ -443,8 +461,7 @@ deps: go-deps-fetch
 tools: go-tools-install
 .PHONY: tools
 
-update:
-	@true # TODO:implement go-deps-update go-tools-update generate
+update: go-deps-update go-tools-update
 .PHONY: update
 
 format: go-fmt
@@ -463,16 +480,15 @@ lint: go-lint
 test: go-test
 .PHONY: test
 
-test-with-coverage: TIMEOUT=5s
-test-with-coverage: go-integration-test-with-coverage
+test-with-coverage: go-test-with-coverage
 .PHONY: test-with-coverage
 
 check: lint test
 .PHONY: check
 
 fast-check: find-todos
-fast-check: go-check go-deps-check go-tools-check
-fast-check: go-deps-tidy go-tools-tidy go-generate git-check
+fast-check: go-check go-deps-check
+fast-check: go-deps-tidy go-generate git-check
 .PHONY: fast-check
 
 full-check: fast-check go-dist-check check
@@ -481,14 +497,26 @@ full-check: fast-check go-dist-check check
 full-test: go-test go-fuzzing-test go-integration-test go-performance-test
 .PHONY: full-test
 
-client: go-client
-.PHONY: client
-
-server: go-server
-.PHONY: server
-
 install: go-install
 .PHONY: install
 
 verbose: make-verbose go-verbose
 .PHONY: verbose
+
+# Repository checks shared with GitHub Actions.
+source-check:
+	$(AT) go vet ./...
+	$(AT) test -z "$$(gofmt -l $$(git ls-files '*.go' ':!:tools/**'))"
+.PHONY: source-check
+
+release-config-check:
+	$(AT) node .github/scripts/goreleaser-check.mjs
+.PHONY: release-config-check
+
+# Tools-module vulnerability checks run in tools.yml, independently of releases.
+release-verify: config-vet source-check go-deps-check go-deps-tidy go-generate git-check
+.PHONY: release-verify
+
+# the application checks of every push, see .github/hooks/pre-push
+verify: go-deps-check generate check git-check
+.PHONY: verify
