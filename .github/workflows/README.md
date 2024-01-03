@@ -163,11 +163,10 @@ flowchart TB
 - **The module goes to go.octolab.org.** For a stable tag, the `vanity` job
   runs [octomation/vanity-action](https://github.com/octomation/vanity-action),
   pinned to a release tag: it writes the entry of
-  `go.octolab.org/toolset/tablo` into the `octolab/vanity` catalog, with a
-  commit signed as the App and a tag `pulse--vX.Y.Z`. The module path keeps
-  the project's former name, and the job passes `name: pulse`, as
-  `octolab/vanity` records. The catalog token is minted separately, from the
-  same App installed on `octolab/vanity`: the tap token is scoped to the tap.
+  `go.octolab.org/toolset/pulse` into the `octolab/vanity` catalog, with a
+  commit signed as the App and a tag `pulse--vX.Y.Z`. The catalog token is
+  minted separately, from the same App installed on `octolab/vanity`: the
+  tap token is scoped to the tap.
   Without the App credentials, the job warns and ends green. The job is
   separate so that a failed publication can be rerun alone
   (`gh run rerun <run-id> --failed`) while the release stays as it is.
