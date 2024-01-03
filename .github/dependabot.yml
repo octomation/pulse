@@ -1,21 +1,6 @@
 version: 2
 
 updates:
-  - package-ecosystem: gomod
-    directory: /
-    schedule:
-      interval: daily
-      time: '05:00'
-      timezone: UTC
-    labels:
-      - 'type: improvement'
-      - 'scope: code'
-      - 'scope: deps'
-    commit-message:
-      prefix: 'feat'
-      include: 'scope'
-    open-pull-requests-limit: 30
-
   - package-ecosystem: github-actions
     directory: /
     schedule:
@@ -28,6 +13,21 @@ updates:
       - 'scope: deps'
     commit-message:
       prefix: 'ci/cd'
+      include: 'scope'
+    open-pull-requests-limit: 30
+
+  - package-ecosystem: gomod
+    directory: /
+    schedule:
+      interval: daily
+      time: '05:00'
+      timezone: UTC
+    labels:
+      - 'type: feature'
+      - 'scope: code'
+      - 'scope: deps'
+    commit-message:
+      prefix: 'feat'
       include: 'scope'
     open-pull-requests-limit: 30
 
@@ -46,6 +46,10 @@ updates:
       include: 'scope'
     open-pull-requests-limit: 30
 
+  # the go tool directive requires tool modules as // indirect, which version
+  # updates skip, so this entry only raises security updates; a native fix is
+  # dependabot/dependabot-core#12050 (tracked in octomation/go-module#546),
+  # until then update with `make go-tools-update`
   - package-ecosystem: gomod
     directory: /tools/
     schedule:
@@ -59,4 +63,4 @@ updates:
     commit-message:
       prefix: 'tools'
       include: 'scope'
-    open-pull-requests-limit: 30
+    open-pull-requests-limit: 0

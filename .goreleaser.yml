@@ -4,27 +4,25 @@ project_name: pulse
 
 archives:
   - id: pulse
-    ids:
-      - pulse
-      - pulsectl
+    ids: [pulse, pulsectl]
     files:
       - LICENSE
     formats: [tar.gz]
     name_template: "{{.ProjectName}}_{{.Version}}_{{.Os}}-{{.Arch}}"
 
 # brews is deprecated upstream, but it is the only GoReleaser generator of a
-# Formula (as octopot/indexit and octomation/maintainer). Keep GoReleaser
-# pinned in CI.
+# Formula: one package for the service and its client, as octopot/indexit and
+# octomation/maintainer ship theirs. Keep GoReleaser pinned in CI.
 brews:
   - name: pulse
     ids: [pulse]
-    # a prerelease tag (vX.Y.Z-rcN) leaves the tap as it is
     skip_upload: auto
     commit_author:
       use_github_app_token: true
-    description: "The pulse service and its client, pulsectl."
+    description: The pulse service and its client, pulsectl.
+    license: MIT
     directory: Formula
-    homepage: https://github.com/octomation/tablo
+    homepage: https://github.com/octomation/pulse
     repository:
       owner: octolab
       name: homebrew-tap
@@ -54,7 +52,7 @@ builds:
       - linux
     ldflags:
       - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
-    main: ./cmd/server
+    main: ./cmd/pulse
   - id: pulsectl
     binary: pulsectl
     env:
@@ -69,11 +67,15 @@ builds:
       - linux
     ldflags:
       - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
-    main: ./cmd/client
+    main: ./cmd/pulsectl
 
 checksum: { name_template: checksums.txt }
 
 release:
-  # the repository comes from the git remote; a prerelease tag (vX.Y.Z-rcN)
-  # is published as a prerelease, never as Latest
+  # the repository comes from the git remote; the title from the release note,
+  # see .github/scripts/release.mjs render
+  name_template: '{{ envOrDefault "RELEASE_TITLE" .Tag }}'
+  # a prerelease tag (vX.Y.Z-rcN) is published as a prerelease, never as Latest
   prerelease: auto
+  preflight:
+    fail_on_error: true

@@ -1,6 +1,11 @@
-name: Issue invalidation
+name: Stale issues cleanup
 
 on:
+  schedule:
+    - cron: 0 6 * * * # at 06:00 every day, UTC
+
+  workflow_call:
+
   workflow_dispatch:
     inputs:
       reason:
@@ -9,13 +14,13 @@ on:
         default: manual healthcheck
         required: true
 
-  schedule:
-    - cron: 0 6 * * * # at 06:00 every day, UTC
+permissions:
+  contents: read
 
 jobs:
   check:
     name: Checking
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
       issues: write
@@ -23,7 +28,7 @@ jobs:
 
     steps:
       - name: Close stale issues and PRs
-        uses: actions/stale@v8
+        uses: actions/stale@v11.0.0
         with:
           days-before-issue-stale: 30
           days-before-issue-close: 7
@@ -55,25 +60,17 @@ jobs:
   notify:
     name: Notifying
     needs: [ check ]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     if: failure() || success()
 
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7.0.1
         with: { fetch-depth: 0 }
-      - name: Define notification message
-        id: message
-        uses: ./.github/actions/notify
 
-      - name: Send Slack notification
-        uses: rtCamp/action-slack-notify@v2
-        continue-on-error: true
-        env:
-          SLACK_COLOR: ${{ contains(needs.*.result, 'failure') && 'failure' || 'success' }}
-          SLACK_FOOTER: made with ❤️ for everyone by OctoLab
-          SLACK_ICON: https://github.com/github.png?size=64
-          SLACK_MESSAGE: ${{ steps.message.outputs.txt }}
-          SLACK_TITLE: '⚠️ ${{ github.repository }}: ${{ github.workflow }}'
-          SLACK_USERNAME: GitHub Actions
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+      - name: Send notification
+        uses: ./.github/actions/notify
+        with:
+          emoji: ⌛️
+          channel: ${{ secrets.SLACK_WEBHOOK }}
+          success: ${{ ! contains(needs.*.result, 'failure') }}
