@@ -12,8 +12,8 @@ import (
 	"go.octolab.org/toolkit/cli/cobra"
 	"go.octolab.org/unsafe"
 
-	"go.octolab.org/toolset/tablo/internal/command"
-	"go.octolab.org/toolset/tablo/internal/config"
+	"go.octolab.org/toolset/pulse/internal/command"
+	"go.octolab.org/toolset/pulse/internal/config"
 )
 
 const unknown = "unknown"
@@ -38,7 +38,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	root := command.NewClient()
+	root := command.NewServer()
 	root.SetErr(stderr)
 	root.SetOut(stdout)
 	root.AddCommand(
