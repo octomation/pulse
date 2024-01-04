@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	. "go.octolab.org/toolset/tablo/internal/command"
+	. "go.octolab.org/toolset/pulse/internal/command"
 )
 
 func TestNewClient(t *testing.T) {

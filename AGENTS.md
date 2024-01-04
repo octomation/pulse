@@ -28,6 +28,23 @@ binaries go into
 every archive and the one Formula; `make install` and `make go-build` build
 both into `bin/<os>/<arch>/`.
 
+## Local services
+
+`pulse` is a local service, started by hand for now. It follows the
+convention of octopot/indexit and octomation/maintainer: it listens on
+loopback only, on `127.0.0.1` and `::1`, and answers at
+`http://pulse.localhost:17842/`. `brew services` does not run it yet; when it
+does, it runs it as the user, without root.
+
+| Port | Service |
+| --- | --- |
+| 17840 | indexit |
+| 17841 | maintainer |
+| 17842 | pulse |
+
+The port of pulse is recorded here only: the AGENTS.md of the other services
+stay as they are.
+
 ## Issues and the board
 
 The issues are mirrored in `.github/issues/` and laid out on the board in

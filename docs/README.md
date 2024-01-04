@@ -37,6 +37,7 @@ Static output is written to `docs/dist/`. `SITE_URL` is required; add `BASE_PATH
 | Location | Purpose |
 | --- | --- |
 | `content/index.mdx` | Product introduction |
+| `content/trend-watch.md` | Trend watch: the prototype page at `pulse.localhost`, built from a checkout |
 | `content/changelog/index.mdx` | Release overview |
 | `content/**/_meta.js` | Navigation order and labels |
 | `navigation.mjs` | Release groups in the sidebar; keeps published release URLs unchanged |

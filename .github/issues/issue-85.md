@@ -20,8 +20,8 @@ state: OPEN
 stateReason: null
 duplicateOf: null
 createdAt: 2026-11-20T04:31:06Z
-updatedAt: 2026-11-20T06:17:48Z
-lastEditedAt: 2026-11-20T06:17:47Z
+updatedAt: 2026-11-20T07:12:53Z
+lastEditedAt: 2026-11-20T07:12:53Z
 closedAt: null
 ---
 
@@ -99,8 +99,8 @@ returned different rankings.
   `owner/name`, compared without case. Its card names every list it is in,
   with its position there.
 - By default the page shows only the repositories that are neither seen nor
-  in the Mindset bookmarks. A switch shows the hidden ones too, each with the
-  reason: seen (when and how), bookmarked in pulse, or in Mindset.
+  in the vault bookmarks. A switch shows the hidden ones too, each with the
+  reason: seen (when and how), bookmarked in pulse, or in the vault.
 - The page reads like a newspaper: a masthead with the date and the counts,
   a front page with the repositories that are in most lists, the first of
   them as the lead story, and then the sections "Today", "This week" and
@@ -146,20 +146,20 @@ returned different rankings.
   with `--format jsonl`, one JSON object per line with the comment. Without a
   running service it fails with a message that says so.
 
-### Mindset
+### Vault
 
-- The path of the Mindset bookmarks directory is in the configuration file of
+- The path of the vault bookmarks directory is in the configuration file of
   pulse, outside the repository. pulse only reads that directory.
-- A repository is in Mindset when a note of the directory names it in the
+- A repository is in the vault when a note of the directory names it in the
   `url` of its frontmatter (`https://github.com/owner/name`) or in one of its
   `aliases` of the form `owner/name`. Other aliases and URLs of owners are
   ignored. The comparison is without case.
-- The notes are read again for every page, so a bookmark added to Mindset
+- The notes are read again for every page, so a bookmark added to the vault
   hides its repository on the next load.
 - A configured directory that cannot be read, or has no note with a
   repository, is an error on the page: the page says that the list may include
-  what is already in Mindset. Without a configured path the page says that the
-  Mindset filter is off.
+  what is already in the vault. Without a configured path the page says that
+  the vault filter is off.
 
 ### State
 
@@ -192,7 +192,7 @@ returned different rankings.
   trendshift.io.
 - [x] Test on fixtures: yesterday's list has 10 repositories, all marked as
   seen; today's has 8 of them and 2 new ones; the page shows exactly those 2.
-- [x] Test: a repository from the Mindset bookmarks and a repository seen a
+- [x] Test: a repository from the vault bookmarks and a repository seen a
   month ago, both trending again, are not shown, and the hidden view names
   the reason for each.
 - [x] Test: a repository in several lists, under different letter case, is
@@ -208,7 +208,7 @@ returned different rankings.
   fails, no bookmark is exported and the repository is still shown.
 - [x] `pulse` refuses to listen on an address that is not loopback.
 - [x] Live run on a separate temporary data directory with the configured
-  Mindset directory: all six lists come from the network; in the browser, one
+  vault directory: all six lists come from the network; in the browser, one
   repository is marked as interesting with a comment and the rest as seen;
   after a restart on the same snapshots nothing is new, and the bookmark with
   its comment is exported. The working state is left untouched.
@@ -226,5 +226,5 @@ returned different rankings.
 ## Out of scope
 
 Snapshots on a schedule and a digest (v2), comments generated from my
-interests, other sources, GitHub stars, writing to Mindset, `brew services`,
+interests, other sources, GitHub stars, writing to the vault, `brew services`,
 the release.
