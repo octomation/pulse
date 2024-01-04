@@ -3,7 +3,7 @@ code: null
 id: I_kwDOJvS0hM5osnIw
 databaseId: 1756525104
 number: 3
-url: https://github.com/octomation/tablo/issues/3
+url: https://github.com/octomation/pulse/issues/3
 title: "core: rethink tablo"
 issueType: null
 labels:

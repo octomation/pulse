@@ -3,7 +3,7 @@ code: null
 id: I_kwDOJvS0hM5osmId
 databaseId: 1756520989
 number: 2
-url: https://github.com/octomation/tablo/issues/2
+url: https://github.com/octomation/pulse/issues/2
 title: "core: watchub port"
 issueType: null
 labels:

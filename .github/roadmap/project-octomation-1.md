@@ -19,6 +19,12 @@ closedAt: null
 
 # 🏗 Platform
 
+> # 🏗 OctoLab Platform
+>
+> Inventory development for internal ecosystem and automation.
+
+![Image](https://user-images.githubusercontent.com/1165416/167242144-47241efe-a94e-4884-a3ae-7d24000c41bd.png)
+
 ## Backlog
 
 - [ ] draft: Taskfiles core concept
@@ -86,24 +92,24 @@ closedAt: null
 - [ ] octomation/go-service#109 — dev: gitops with argocd and crossplane
 - [ ] octomation/maintainer#153 — template: go new support
 - [ ] octomation/go-module#145 — docs: provide example for go new
-- [ ] octomation/install#9 — ci/cd: find way to trigger checking workflows when homebrew-tap was updated
-- [ ] octomation/install#10 — ci/cd: find way to regenerate install scripts after godownloader update
+- [ ] octolab/install#9 — ci/cd: find way to trigger checking workflows when homebrew-tap was updated
+- [ ] octolab/install#10 — ci/cd: find way to regenerate install scripts after godownloader update
 - [ ] octomation/makefiles#72 — go: support GODEBUG
 - [ ] octomation/makefiles#73 — go: support GOTOOLCHAIN
 - [ ] octomation/go-module#165 — ci/cd: notification failed
-- [ ] octomation/install#14 — dev: fake static api
+- [ ] octolab/install#14 — dev: fake static api
 - [ ] octomation/taskfiles#3 — utility: notify if a run is longer than X sec
 - [ ] octomation/makefiles#75 — go: docker: change entrypoint name
 - [ ] octomation/go-module#171 — ci/cd: docs workflow doesn't work properly for non-custom github pages domain
 - [ ] octomation/makefiles#76 — go: goreleaser: replace --skip-publish flag
-- [ ] octomation/install#19 — ci/cd: fragile pipelines
+- [ ] octolab/install#19 — ci/cd: fragile pipelines
 - [ ] octomation/go-module#176 — docs: experiment with readme
 - [ ] octomation/go-module#179 — ci/cd: there is no workflow triggering for dependabot update
 - [ ] octomation/makefiles#77 — go: service: buf integration
 - [ ] octomation/maintainer#175 — maintainance: sync with the go-tool template
 - [ ] octopot/stub#10 — ci/cd: add integration tests
 - [ ] octomation/go-service#173 — ci/cd: broken builds
-- [ ] octomation/install#38 — deps: remove okteto
+- [ ] octolab/install#38 — deps: remove okteto
 - [ ] octomation/go-module#191 — dev: drop unsupported go versions
 - [ ] octomation/maintainer#193 — github: suggestion: reduce jitter
 - [ ] octomation/maintainer#197 — insights: deps: fetch data from deps.dev
@@ -280,14 +286,14 @@ closedAt: null
 - [x] octomation/go-module#103 — ci/cd: extend Notifying
 - [x] octomation/maintainer#124 — github: contribution: suggest use incorrect center
 - [x] octomation/maintainer#126 — github: contribution: incorrect shows stats for future
-- [x] octomation/vanity#9 — ci/cd: switch GitHub Pages from branch to GitHub Actions model
-- [x] octomation/vanity#10 — dev: add go-module as first git module and configure dependabot
+- [x] octolab/vanity#9 — ci/cd: switch GitHub Pages from branch to GitHub Actions model
+- [x] octolab/vanity#10 — dev: add go-module as first git module and configure dependabot
 - [x] octomation/maintainer#133 — github: contribution: suggest for cmm
 - [x] octomation/go-module#105 — docs: edit links are incorrect
-- [x] octomation/vanity#11 — dev: define multi-module workspace
-- [x] octomation/vanity#12 — dev: integrate go-tool
-- [x] octomation/vanity#13 — dev: integrate go-service
-- [x] octomation/vanity#8 — cd/cd: automation based on submodules
+- [x] octolab/vanity#11 — dev: define multi-module workspace
+- [x] octolab/vanity#12 — dev: integrate go-tool
+- [x] octolab/vanity#13 — dev: integrate go-service
+- [x] octolab/vanity#8 — cd/cd: automation based on submodules
 - [x] octomation/go-module#106 — dev: maintainer and module renaming
 - [x] octomation/makefiles#69 — go: tool: adopt makefile from module
 - [x] octomation/makefiles#70 — go: service: adopt makefile from module
@@ -295,20 +301,20 @@ closedAt: null
 - [x] octomation/go-module#125 — dev: split Taskfile and prepare to autogenerate it
 - [x] octomation/go-module#128 — dev: move docs research outside the codebase and create a discussion for that
 - [x] octomation/go-module#131 — docs: fix broken cover image
-- [x] octomation/install#1 — research: brew installation
+- [x] octolab/install#1 — research: brew installation
 - [x] octomation/maintainer#148 — github: contribution: edge case for contrib suggestion
 - [x] octomation/maintainer#150 — github: contribution: broken heatmap
-- [x] octomation/install#2 — ci/cd: use dist, not root for publishing
-- [x] octomation/install#3 — vendor: port installation scripts
-- [x] octomation/install#4 — ci/cd: add healthcheck scripts
-- [x] octomation/install#5 — docs: readme: update description and link it with homebrew-taps
-- [x] octomation/install#6 — dev: add inventory to manage workflows
-- [x] octomation/install#7 — dev: add hidden description how to install vendor packages
-- [x] octomation/vanity#192 — perf: avoid downloading deps
+- [x] octolab/install#2 — ci/cd: use dist, not root for publishing
+- [x] octolab/install#3 — vendor: port installation scripts
+- [x] octolab/install#4 — ci/cd: add healthcheck scripts
+- [x] octolab/install#5 — docs: readme: update description and link it with homebrew-taps
+- [x] octolab/install#6 — dev: add inventory to manage workflows
+- [x] octolab/install#7 — dev: add hidden description how to install vendor packages
+- [x] octolab/vanity#192 — perf: avoid downloading deps
 - [x] octomation/maintainer#155 — github: contribution: simplify arguments format
 - [x] octopot/stub#2 — ci/cd: build docker image
 - [x] octopot/stub#1 — poc: simple traefik application with top-level domains for redirects
-- [x] octomation/install#8 — ci/cd: change goimports check script
+- [x] octolab/install#8 — ci/cd: change goimports check script
 - [x] octomation/go-tool#109 — ci/cd: support go 1.21
 - [x] octomation/go-service#126 — ci/cd: support go 1.21
 - [x] octomation/makefiles#71 — dev: support go 1.21
@@ -316,12 +322,12 @@ closedAt: null
 - [x] octopot/stub#3 — feat: use dynamic config instead of static
 - [x] octomation/taskfiles#1 — sync: update latest changes from forks
 - [x] octomation/maintainer#158 — github: up google/go-github to v55.0.0
-- [x] octomation/install#13 — dev: add atlas installation
-- [x] octomation/install#12 — dev: up github cli to v2.35.0
+- [x] octolab/install#13 — dev: add atlas installation
+- [x] octolab/install#12 — dev: up github cli to v2.35.0
 - [x] octomation/go-module#166 — ci/cd: support Cloudflare pages
 - [x] octomation/go-module#169 (PR) — fix #166: ci/cd: support Cloudflare pages
 - [x] octomation/go-service#152 — boilerplate: stub server with whoami
-- [x] octomation/install#15 — docs: remove -L option and provide wget example
+- [x] octolab/install#15 — docs: remove -L option and provide wget example
 - [x] octomation/maintainer#174 — github: contribution: html markup was changed
 - [x] octomation/maintainer#189 — github: contribution: suggest doesn't work properly in headless mode
 - [x] octomation/maintainer#219 — ci/cd: Continuous integration healthcheck doesn't work properly

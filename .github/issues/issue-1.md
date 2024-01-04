@@ -3,7 +3,7 @@ code: null
 id: I_kwDOJvS0hM5oslkT
 databaseId: 1756518675
 number: 1
-url: https://github.com/octomation/tablo/issues/1
+url: https://github.com/octomation/pulse/issues/1
 title: "core: gitboard port"
 issueType: null
 labels:

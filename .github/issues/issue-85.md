@@ -7,10 +7,10 @@ url: https://github.com/octomation/pulse/issues/85
 title: "core: trend-watch without repeats"
 issueType: Feature
 labels:
-  - "effort: hard"
-  - "impact: high"
-  - "scope: code"
   - "type: feature"
+  - "scope: code"
+  - "impact: high"
+  - "effort: hard"
 assignees:
   - kamilsk
 milestone: null
