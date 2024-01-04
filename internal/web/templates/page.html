@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>{{if .Shown}}({{len .Shown}}) {{end}}pulse · trend-watch</title>
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/assets/app.css">
+<script src="/assets/app.js" defer></script>
+</head>
+<body data-view="{{if .ShowHidden}}hidden{{else}}new{{end}}">
+
+<header class="masthead">
+  <div class="dateline">
+    <span>{{day .Now}}</span>
+    <span class="counts" aria-live="polite"><b data-count="new">{{len .Shown}}</b> new <i>·</i> <b data-count="hidden">{{.HiddenCount}}</b> hidden</span>
+  </div>
+  <h1 class="brand"><a href="/">The Pulse</a></h1>
+  <p class="motto">trend-watch <i>·</i> only what you have not seen</p>
+  <nav class="controls">
+    <a class="switch" role="switch" aria-checked="{{if .ShowHidden}}true{{else}}false{{end}}" data-action="toggle-hidden" href="{{if .ShowHidden}}/{{else}}/?hidden=1{{end}}"><span class="knob" aria-hidden="true"></span>Show hidden</a>
+    <button type="button" class="button" data-action="refresh" title="Load all six lists now">Refresh</button>
+    <button type="button" class="button primary" data-action="seen-all" title="Mark the repositories shown on this page as seen"{{if not .Shown}} disabled{{end}}>Mark all shown as seen</button>
+  </nav>
+  <p class="notice" id="notice" role="alert" hidden></p>
+</header>
+
+<main>
+  <section class="status" aria-label="Lists">
+    <ul class="lists">
+      {{- range .Lists}}
+      <li class="list{{if .Failed}} is-failed{{end}}{{if not .Loaded}} is-missing{{end}}" data-list="{{.List}}">
+        <span class="list-name">{{title .List}}</span>
+        {{- if .Loaded}}
+        <span class="list-state"><time datetime="{{stamp .FetchedAt}}" title="{{full .FetchedAt}}">{{short .FetchedAt $.Now}}</time> <i>·</i> {{plural .Count "repository" "repositories"}}</span>
+        {{- else}}
+        <span class="list-state">no snapshot yet</span>
+        {{- end}}
+        {{- if .Failed}}
+        <span class="list-error">Failed <time datetime="{{stamp .FailedAt}}" title="{{full .FailedAt}}">{{short .FailedAt $.Now}}</time>: {{.Reason}}{{if .Loaded}}. Showing the snapshot of {{full .FetchedAt}}.{{end}}</span>
+        {{- end}}
+      </li>
+      {{- end}}
+    </ul>
+    {{- with .Vault}}
+    {{- if not .Configured}}
+    <p class="vault is-off" data-vault="off">The vault filter is off: the configuration names no bookmarks directory.</p>
+    {{- else if .Error}}
+    <p class="vault is-failed" data-vault="error">The bookmarks of the vault could not be read: {{.Error}}. The list may include what is already in the vault.</p>
+    {{- else}}
+    <p class="vault" data-vault="ok">Vault: {{plural .Repos "repository" "repositories"}} in {{plural .Notes "note" "notes"}}
+      {{- if .Broken}}; <span class="vault-broken" title="{{names .Broken}}">{{plural (len .Broken) "note" "notes"}} could not be read</span>{{end}}.</p>
+    {{- end}}
+    {{- end}}
+    {{- if .Problem}}
+    <p class="problem" role="alert">{{.Problem}}</p>
+    {{- end}}
+  </section>
+
+  <div id="empty">
+    {{- if not .Shown}}
+    {{template "empty" .Empty}}
+    {{- end}}
+  </div>
+
+  <div id="shown">
+    {{- range .Sections}}
+    <section class="section is-{{.Kind}}" data-section="{{.Kind}}" aria-label="{{.Title}}">
+      <header class="section-head"><h2>{{.Title}}</h2><p>{{.Note}}</p></header>
+      <div class="cards">
+        {{- range .Cards}}
+        {{template "card" .}}
+        {{- end}}
+      </div>
+    </section>
+    {{- end}}
+  </div>
+
+  {{- if .ShowHidden}}
+  <section class="section is-hidden-part" aria-label="Hidden repositories">
+    <header class="section-head"><h2>Hidden</h2><p>Seen, bookmarked or in the vault</p></header>
+    <div class="cards" id="hidden">
+      {{- range .Hidden}}
+      {{template "card" .}}
+      {{- end}}
+    </div>
+  </section>
+  {{- end}}
+</main>
+
+<footer class="colophon">pulse serves this page from your computer. <kbd>j</kbd> <kbd>k</kbd> move between repositories in the reader, <kbd>Esc</kbd> closes it.</footer>
+
+<div class="reader" id="reader" hidden>
+  <div class="reader-shade" data-action="close-reader"></div>
+  <aside class="reader-sheet" role="dialog" aria-modal="true" aria-label="Repository" tabindex="-1">
+    <nav class="reader-bar">
+      <button type="button" class="button" data-action="prev-story" title="Previous (k)">← Previous</button>
+      <button type="button" class="button" data-action="next-story" title="Next (j)">Next →</button>
+      <span class="reader-place" id="reader-place"></span>
+      <button type="button" class="button" data-action="close-reader" title="Close (Esc)">Close</button>
+    </nav>
+    <div class="reader-body" id="reader-body"></div>
+  </aside>
+</div>
+
+</body>
+</html>
+{{- define "empty"}}
+<section class="empty is-{{.Kind}}" data-empty="{{.Kind}}">
+  <h2>{{.Title}}</h2>
+  <p>{{.Text}}</p>
+</section>
+{{- end}}
+{{- define "reasons"}}
+  <ul class="reasons">
+    {{- with .Seen}}
+    <li class="reason" data-reason="seen">{{action .Action}} on <time datetime="{{stamp .At}}">{{full .At}}</time></li>
+    {{- end}}
+    {{- with .Bookmark}}
+    <li class="reason" data-reason="bookmark">Bookmarked in pulse{{if .Comment}}: <q>{{.Comment}}</q>{{else}}, without a comment{{end}}</li>
+    {{- end}}
+    {{- with .Vault}}
+    <li class="reason" data-reason="vault">In the vault: {{.Note}}</li>
+    {{- end}}
+  </ul>
+{{- end}}
+{{- define "card"}}
+<article class="card is-{{.State}}{{if .Lead}} is-lead{{end}}" data-repo="{{.Key}}" data-state="{{.State}}" data-name="{{.Repo}}">
+  <p class="kicker">{{if .Language}}{{.Language}} <i>·</i> {{end}}{{among (len .Lists)}}</p>
+  <h3 class="card-name"><a href="{{.Repo.URL}}" data-action="read" rel="noopener noreferrer"><span class="owner">{{.Repo.Owner}}</span><span class="slash">/</span><span class="name">{{.Repo.Name}}</span></a></h3>
+  {{- if .Description}}
+  <p class="description" data-action="read">{{.Description}}</p>
+  {{- end}}
+  <ul class="badges">
+    {{- range .Lists}}
+    <li class="badge is-{{.List.Source}}" data-list="{{.List}}">{{title .List}} <b>#{{.Rank}}</b></li>
+    {{- end}}
+  </ul>
+  {{- if eq .State "hidden"}}
+  {{template "reasons" .}}
+  {{- end}}
+  <form class="actions">
+    <input type="text" name="comment" value="{{.Comment}}" maxlength="500" autocomplete="off" placeholder="Why it is interesting (optional)" aria-label="Comment for {{.Repo}}">
+    <button type="submit" class="button primary" data-action="interesting">{{if .Bookmark}}Save comment{{else}}Interesting{{end}}</button>
+    {{- if eq .State "shown"}}
+    <button type="button" class="button" data-action="skip">Skip</button>
+    {{- end}}
+  </form>
+  <p class="card-error" role="alert" hidden></p>
+</article>
+{{- end}}

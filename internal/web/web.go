@@ -1,0 +1,110 @@
+// Package web serves trend-watch over HTTP on loopback: the page, its
+// assets and the API the page and pulsectl call.
+package web
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"net"
+	"net/http"
+	"strconv"
+	"strings"
+	"syscall"
+	"time"
+
+	"go.octolab.org/toolset/pulse/internal/config"
+)
+
+// URL returns the address of the service on port.
+func URL(port int) string { return "http://" + config.Host + ":" + strconv.Itoa(port) + "/" }
+
+// URLFor returns the address to open for a listener: the name of the service
+// when it listens on 127.0.0.1 or ::1, which the name resolves to, the
+// literal address otherwise.
+func URLFor(addr net.Addr) string {
+	if tcp, ok := addr.(*net.TCPAddr); ok && (tcp.IP.Equal(net.IPv4(127, 0, 0, 1)) || tcp.IP.Equal(net.IPv6loopback)) {
+		return URL(tcp.Port)
+	}
+	return "http://" + addr.String() + "/"
+}
+
+// Listen binds every address, after it checked that each is loopback: no
+// address is bound when one of them is not. With optional set, an address
+// the system does not have, such as [::1] with IPv6 turned off, is passed to
+// skip and left out; any other failure, or no address bound at all, is an
+// error.
+func Listen(ctx context.Context, addresses []string, optional bool, skip func(address string, err error)) ([]net.Listener, error) {
+	for _, address := range addresses {
+		if err := config.CheckLoopback(address); err != nil {
+			return nil, err
+		}
+	}
+	var listeners []net.Listener
+	closeAll := func() {
+		for _, listener := range listeners {
+			_ = listener.Close()
+		}
+	}
+	for _, address := range addresses {
+		listener, err := (&net.ListenConfig{}).Listen(ctx, "tcp", address)
+		if err != nil {
+			if optional && unavailable(err) {
+				skip(address, err)
+				continue
+			}
+			closeAll()
+			return nil, err
+		}
+		listeners = append(listeners, listener)
+	}
+	if len(listeners) == 0 {
+		return nil, fmt.Errorf("no address to listen on: %s", strings.Join(addresses, ", "))
+	}
+	return listeners, nil
+}
+
+// unavailable reports whether err means the system has no such address or
+// address family, rather than, say, a port already in use.
+func unavailable(err error) bool {
+	return errors.Is(err, syscall.EADDRNOTAVAIL) || errors.Is(err, syscall.EAFNOSUPPORT) ||
+		errors.Is(err, syscall.EPROTONOSUPPORT)
+}
+
+// Serve answers on every listener with handler until ctx ends, then shuts
+// down gracefully: it stops accepting connections and waits up to grace for
+// the responses in flight. A failure of a listener ends it with that error.
+func Serve(ctx context.Context, listeners []net.Listener, handler http.Handler, grace time.Duration) error {
+	server := &http.Server{
+		Handler:           handler,
+		ReadHeaderTimeout: 5 * time.Second,
+		WriteTimeout:      2 * time.Minute,
+		IdleTimeout:       60 * time.Second,
+	}
+	served := make(chan error, len(listeners))
+	for _, listener := range listeners {
+		go func() { served <- server.Serve(listener) }()
+	}
+	var err error
+	pending := len(listeners)
+	select {
+	case err = <-served:
+		pending--
+	case <-ctx.Done():
+	}
+	shutdown, cancel := context.WithTimeout(context.Background(), grace)
+	defer cancel()
+	if e := server.Shutdown(shutdown); e != nil {
+		_ = server.Close()
+		err = errors.Join(err, fmt.Errorf("shutdown: %w", e))
+	}
+	for ; pending > 0; pending-- {
+		if e := <-served; !errors.Is(e, http.ErrServerClosed) {
+			err = errors.Join(err, e)
+		}
+	}
+	if errors.Is(err, http.ErrServerClosed) {
+		return nil
+	}
+	return err
+}

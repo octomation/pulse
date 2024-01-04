@@ -1,0 +1,215 @@
+{
+  "trendshift/daily": [
+    {
+      "rank": 1,
+      "repo": {
+        "owner": "anthropics",
+        "name": "claude-code"
+      },
+      "description": "An agentic coding tool that lives in your terminal."
+    },
+    {
+      "rank": 2,
+      "repo": {
+        "owner": "ollama",
+        "name": "ollama"
+      },
+      "description": "Get up and running with large language models."
+    },
+    {
+      "rank": 3,
+      "repo": {
+        "owner": "astral-sh",
+        "name": "uv"
+      },
+      "description": "An extremely fast Python package and project manager."
+    },
+    {
+      "rank": 4,
+      "repo": {
+        "owner": "denoland",
+        "name": "deno"
+      },
+      "description": "A modern runtime for JavaScript and TypeScript."
+    },
+    {
+      "rank": 5,
+      "repo": {
+        "owner": "golang",
+        "name": "go"
+      },
+      "description": "The Go programming language."
+    }
+  ],
+  "trendshift/weekly": [
+    {
+      "rank": 1,
+      "repo": {
+        "owner": "astral-sh",
+        "name": "uv"
+      },
+      "description": "An extremely fast Python package and project manager."
+    },
+    {
+      "rank": 2,
+      "repo": {
+        "owner": "denoland",
+        "name": "deno"
+      },
+      "description": "A modern runtime for JavaScript and TypeScript."
+    },
+    {
+      "rank": 3,
+      "repo": {
+        "owner": "golang",
+        "name": "go"
+      },
+      "description": "The Go programming language."
+    },
+    {
+      "rank": 4,
+      "repo": {
+        "owner": "rust-lang",
+        "name": "rust"
+      },
+      "description": "Empowering everyone to build reliable and efficient software."
+    },
+    {
+      "rank": 5,
+      "repo": {
+        "owner": "tailscale",
+        "name": "tailscale"
+      },
+      "description": "The easiest, most secure way to use WireGuard and 2FA."
+    }
+  ],
+  "trendshift/monthly": [
+    {
+      "rank": 1,
+      "repo": {
+        "owner": "rust-lang",
+        "name": "rust"
+      },
+      "description": "Empowering everyone to build reliable and efficient software."
+    },
+    {
+      "rank": 2,
+      "repo": {
+        "owner": "tailscale",
+        "name": "tailscale"
+      },
+      "description": "The easiest, most secure way to use WireGuard and 2FA."
+    },
+    {
+      "rank": 3,
+      "repo": {
+        "owner": "caddyserver",
+        "name": "caddy"
+      },
+      "description": "Fast and extensible multi-platform web server with automatic HTTPS."
+    },
+    {
+      "rank": 4,
+      "repo": {
+        "owner": "charmbracelet",
+        "name": "bubbletea"
+      },
+      "description": "A powerful little TUI framework."
+    },
+    {
+      "rank": 5,
+      "repo": {
+        "owner": "junegunn",
+        "name": "fzf"
+      },
+      "description": "A command-line fuzzy finder."
+    }
+  ],
+  "github/daily": [
+    {
+      "rank": 1,
+      "repo": {
+        "owner": "anthropics",
+        "name": "claude-code"
+      },
+      "description": "An agentic coding tool that lives in your terminal.",
+      "language": "TypeScript"
+    },
+    {
+      "rank": 2,
+      "repo": {
+        "owner": "ollama",
+        "name": "ollama"
+      },
+      "description": "Get up and running with large language models.",
+      "language": "Go"
+    },
+    {
+      "rank": 3,
+      "repo": {
+        "owner": "caddyserver",
+        "name": "caddy"
+      },
+      "description": "Fast and extensible multi-platform web server with automatic HTTPS.",
+      "language": "Go"
+    }
+  ],
+  "github/weekly": [
+    {
+      "rank": 1,
+      "repo": {
+        "owner": "denoland",
+        "name": "deno"
+      },
+      "description": "A modern runtime for JavaScript and TypeScript.",
+      "language": "Rust"
+    },
+    {
+      "rank": 2,
+      "repo": {
+        "owner": "charmbracelet",
+        "name": "bubbletea"
+      },
+      "description": "A powerful little TUI framework.",
+      "language": "Go"
+    },
+    {
+      "rank": 3,
+      "repo": {
+        "owner": "junegunn",
+        "name": "fzf"
+      },
+      "description": "A command-line fuzzy finder.",
+      "language": "Go"
+    }
+  ],
+  "github/monthly": [
+    {
+      "rank": 1,
+      "repo": {
+        "owner": "golang",
+        "name": "go"
+      },
+      "description": "The Go programming language.",
+      "language": "Go"
+    },
+    {
+      "rank": 2,
+      "repo": {
+        "owner": "rust-lang",
+        "name": "rust"
+      },
+      "description": "Empowering everyone to build reliable and efficient software.",
+      "language": "Rust"
+    },
+    {
+      "rank": 3,
+      "repo": {
+        "owner": "tailscale",
+        "name": "tailscale"
+      },
+      "description": "The easiest, most secure way to use WireGuard and 2FA.",
+      "language": "Go"
+    }
+  ]
+}

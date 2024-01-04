@@ -1,0 +1,103 @@
+{{- define "story"}}
+<div class="story is-{{.State}}" data-repo="{{.Key}}" data-state="{{.State}}" data-name="{{.Repo}}">
+  <p class="kicker">{{with .Details}}{{if .Language}}{{.Language}}{{end}}{{else}}{{.Language}}{{end}}{{if .Lists}} <i>·</i> {{among (len .Lists)}}{{end}}</p>
+  <h2 class="story-name"><span class="owner">{{.Repo.Owner}}</span><span class="slash">/</span><span class="name">{{.Repo.Name}}</span></h2>
+  {{- $description := .Description}}{{with .Details}}{{if .Description}}{{$description = .Description}}{{end}}{{end}}
+  {{- if $description}}
+  <p class="story-deck">{{$description}}</p>
+  {{- end}}
+  {{- with .Details}}
+  <dl class="facts">
+    <div><dt>Stars</dt><dd>{{num .Stars}}</dd></div>
+    <div><dt>Forks</dt><dd>{{num .Forks}}</dd></div>
+    <div><dt>Open issues</dt><dd>{{num .OpenIssues}}</dd></div>
+    {{- if .License}}
+    <div><dt>License</dt><dd>{{.License}}</dd></div>
+    {{- end}}
+    {{- if not .CreatedAt.IsZero}}
+    <div><dt>Since</dt><dd><time datetime="{{stamp .CreatedAt}}">{{month .CreatedAt}}</time></dd></div>
+    {{- end}}
+    {{- if not .PushedAt.IsZero}}
+    <div><dt>Last push</dt><dd><time datetime="{{stamp .PushedAt}}">{{date .PushedAt}}</time></dd></div>
+    {{- end}}
+  </dl>
+  {{- if .Archived}}
+  <p class="story-note">The repository is archived.</p>
+  {{- end}}
+  {{- if .Topics}}
+  <ul class="topics">
+    {{- range .Topics}}
+    <li>{{.}}</li>
+    {{- end}}
+  </ul>
+  {{- end}}
+  {{- end}}
+  <ul class="badges">
+    {{- range .Lists}}
+    <li class="badge is-{{.List.Source}}" data-list="{{.List}}">{{title .List}} <b>#{{.Rank}}</b></li>
+    {{- end}}
+  </ul>
+  {{- if eq .State "hidden"}}
+  {{template "reasons" .}}
+  {{- end}}
+  <form class="actions">
+    <input type="text" name="comment" value="{{.Comment}}" maxlength="500" autocomplete="off" placeholder="Why it is interesting (optional)" aria-label="Comment for {{.Repo}}">
+    <button type="submit" class="button primary" data-action="interesting">{{if .Bookmark}}Save comment{{else}}Interesting{{end}}</button>
+    {{- if eq .State "shown"}}
+    <button type="button" class="button" data-action="skip">Skip</button>
+    {{- end}}
+  </form>
+  <p class="card-error" role="alert" hidden></p>
+  <p class="story-links">
+    <a href="{{.Repo.URL}}" target="_blank" rel="noopener noreferrer">github.com/{{.Repo}}</a>
+    {{- with .Details}}{{if .Homepage}} <i>·</i> <a href="{{.Homepage}}" target="_blank" rel="noopener noreferrer">{{.Homepage}}</a>{{end}}{{end}}
+  </p>
+  {{- if .Error}}
+  <p class="story-error" role="alert" data-story="error">GitHub is not in this story: {{.Error}}. Above is what the lists know.</p>
+  {{- else if not .Details}}
+  <p class="story-note" data-story="offline">pulse was started without access to GitHub: above is what the lists know.</p>
+  {{- else if .Details.Readme}}
+  <iframe class="readme" data-story="readme" src="/repos/{{.Repo.Owner}}/{{.Repo.Name}}/readme" sandbox="allow-popups allow-popups-to-escape-sandbox" referrerpolicy="no-referrer" title="README of {{.Repo}}"></iframe>
+  {{- else}}
+  <p class="story-note" data-story="no-readme">The repository has no README.</p>
+  {{- end}}
+</div>
+{{- end}}
+{{- define "readme"}}<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="color-scheme" content="light dark">
+<title>README of {{.Repo}}</title>
+<style>
+:root { color-scheme: light dark; --ink: #1d1a16; --soft: #6b6257; --rule: #d9d0c0; --paper: #fbf8f1; --tint: #f1ebdd; --link: #8a2b1d; }
+@media (prefers-color-scheme: dark) { :root { --ink: #e9e3d6; --soft: #a69c8c; --rule: #3a352d; --paper: #1b1915; --tint: #26231d; --link: #e49b82; } }
+html { background: var(--paper); }
+body { margin: 0; padding: 4px 4px 48px; color: var(--ink); font: 17px/1.6 "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, ui-serif, serif; overflow-wrap: break-word; }
+h1, h2, h3, h4, h5, h6 { font-family: "New York", ui-serif, "Iowan Old Style", Georgia, serif; line-height: 1.2; margin: 1.6em 0 .5em; }
+h1 { font-size: 1.7em; } h2 { font-size: 1.35em; border-bottom: 1px solid var(--rule); padding-bottom: .25em; } h3 { font-size: 1.15em; }
+a { color: var(--link); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+img, video { max-width: 100%; height: auto; }
+pre, code, kbd, samp { font: 13.5px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; }
+code { background: var(--tint); padding: .1em .3em; border-radius: 3px; }
+pre { background: var(--tint); padding: 12px 14px; overflow-x: auto; border-radius: 4px; }
+pre code { background: none; padding: 0; }
+blockquote { margin: 1em 0; padding: 0 1em; border-left: 3px solid var(--rule); color: var(--soft); }
+table { border-collapse: collapse; display: block; overflow-x: auto; max-width: 100%; font-size: .92em; }
+th, td { border: 1px solid var(--rule); padding: 5px 10px; text-align: left; }
+hr { border: 0; border-top: 1px solid var(--rule); margin: 2em 0; }
+.anchor, .octicon, clipboard-copy, .zeroclipboard-container { display: none; }
+p.failed { color: var(--soft); font-style: italic; }
+</style>
+</head>
+<body>
+{{- if .Error}}
+<p class="failed">The README could not be loaded: {{.Error}}.</p>
+{{- else if .Readme}}
+{{.Readme}}
+{{- else}}
+<p class="failed">The repository has no README.</p>
+{{- end}}
+</body>
+</html>
+{{- end}}

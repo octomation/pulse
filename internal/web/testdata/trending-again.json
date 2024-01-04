@@ -1,0 +1,81 @@
+{
+  "trendshift/daily": [
+    {
+      "rank": 1,
+      "repo": {
+        "owner": "Snouzy",
+        "name": "workout-cool"
+      },
+      "description": "A modern open-source fitness coaching platform."
+    },
+    {
+      "rank": 2,
+      "repo": {
+        "owner": "tailscale",
+        "name": "tailscale"
+      },
+      "description": "The easiest, most secure way to use WireGuard and 2FA."
+    }
+  ],
+  "trendshift/weekly": [
+    {
+      "rank": 1,
+      "repo": {
+        "owner": "astral-sh",
+        "name": "uv"
+      },
+      "description": "An extremely fast Python package and project manager."
+    },
+    {
+      "rank": 2,
+      "repo": {
+        "owner": "anthropics",
+        "name": "claude-code"
+      },
+      "description": "An agentic coding tool that lives in your terminal."
+    }
+  ],
+  "trendshift/monthly": [
+    {
+      "rank": 1,
+      "repo": {
+        "owner": "anthropics",
+        "name": "claude-code"
+      },
+      "description": "An agentic coding tool that lives in your terminal."
+    }
+  ],
+  "github/daily": [
+    {
+      "rank": 1,
+      "repo": {
+        "owner": "tailscale",
+        "name": "tailscale"
+      },
+      "description": "The easiest, most secure way to use WireGuard and 2FA.",
+      "language": "Go"
+    }
+  ],
+  "github/weekly": [
+    {
+      "rank": 1,
+      "repo": {
+        "owner": "snouzy",
+        "name": "workout-cool"
+      },
+      "description": "A modern open-source fitness coaching platform.",
+      "language": "TypeScript"
+    }
+  ],
+  "github/monthly": [
+    {
+      "rank": 1,
+      "repo": {
+        "owner": "astral-sh",
+        "name": "uv"
+      },
+      "description": "An extremely fast Python package and project manager.",
+      "language": "Rust"
+    }
+  ]
+}
