@@ -1,0 +1,33 @@
+{
+  "list": "trendshift/monthly",
+  "request": "https://trendshift.io/monthly",
+  "fetched_at": "2026-11-19T16:31:00Z",
+  "marker": "https://trendshift.io/monthly Monthly",
+  "repos": [
+    "storytold/craft-anything",
+    "pingdotgg/t3code",
+    "ccch1mneyyy/dsh-Go",
+    "deepseek-ai/dsh-superagent-prototype",
+    "vercel-labs/agent-desktop",
+    "GoogleChrome/modern-web-guidance",
+    "sherlock-project/sherlock",
+    "meta/astryx",
+    "morluto/rea",
+    "milind-soni/OpenMausBot",
+    "heydamir/unslop",
+    "NVIDIA/auto-ontology",
+    "BaaRai/ARTEX",
+    "D4Vinci/Scrapling",
+    "Ebony-Vinyl/dsh-our-free-model",
+    "anefzaoui/misterdownloadmanager",
+    "google/elephant-goldfish-model",
+    "cloudflare/security-audit-skill",
+    "anthropics/skills",
+    "JuneYaooo/rea-video",
+    "libracoder/kiri",
+    "l0ng-ai/openidea",
+    "vercel-labs/agent-browser",
+    "Minireel/HGhub",
+    "mattpocock/skills"
+  ]
+}

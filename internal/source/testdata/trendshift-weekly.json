@@ -1,0 +1,33 @@
+{
+  "list": "trendshift/weekly",
+  "request": "https://trendshift.io/weekly",
+  "fetched_at": "2026-11-19T16:30:58Z",
+  "marker": "https://trendshift.io/weekly Weekly",
+  "repos": [
+    "BaaRai/ARTEX",
+    "elementalsouls/Claude-BugHunter",
+    "google-research/paper-orchestra",
+    "dream-num/univer",
+    "mdiri-ai/SoduWork",
+    "erkamyaman/rust-anything",
+    "mvanhorn/last30days-skill",
+    "morluto/rea",
+    "krisgfx9/Wireless-Device-Battery-Monitor",
+    "ag-ui-protocol/ag-ui",
+    "nexu-io/openmotion",
+    "libracoder/kiri",
+    "Immortal-Protocols/lastbook",
+    "NYLLON-SOFTWARE/SignuDoc",
+    "NVIDIA/SkillEvaluator",
+    "boykopovar/AnyPS5",
+    "obra/superpowers",
+    "Ebony-Vinyl/dsh-our-free-model",
+    "GoogleChrome/modern-web-guidance",
+    "ersinkoc/phonebox",
+    "Tencent/LoopForge",
+    "pingdotgg/t3code",
+    "getarcaneapp/arcane",
+    "kajisho5/ffmpeg-skill",
+    "ccch1mneyyy/dsh-Go"
+  ]
+}

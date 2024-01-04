@@ -1,0 +1,33 @@
+{
+  "list": "trendshift/daily",
+  "request": "https://trendshift.io/",
+  "fetched_at": "2026-11-19T16:30:34Z",
+  "marker": "https://trendshift.io Daily",
+  "repos": [
+    "BaaRai/ARTEX",
+    "boykopovar/AnyPS5",
+    "erkamyaman/rust-anything",
+    "mdiri-ai/SoduWork",
+    "simplexai-labs/linger",
+    "HKUDS/CLI-Anything",
+    "nexu-io/openmotion",
+    "firecrawl/firecrawl",
+    "aoci-spec/aoci-code",
+    "mvanhorn/last30days-skill",
+    "apekshik/anymachine",
+    "Bodila51/gtavi-claudecode",
+    "felipebasurto/unslop-ui",
+    "bitwarden/agent-access",
+    "toyxyz/toyxyz_RGBMocap",
+    "google-research/paper-orchestra",
+    "n8n-io/n8n",
+    "stablyai/orca",
+    "DietrichGebert/ponytail",
+    "KytyPS5/KytyPS5",
+    "DeanChensj/jiangshan-map",
+    "trypostit/trypost",
+    "imxieyi/Kernarium",
+    "sqlpxc/airhand",
+    "storytold/craft-anything"
+  ]
+}
