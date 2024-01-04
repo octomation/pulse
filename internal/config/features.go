@@ -2,10 +2,6 @@ package config
 
 import "go.octolab.org/toolkit/config"
 
-// Features defines a list of available features.
-var Features = config.Features{
-	{
-		Name:    "boilerplate",
-		Enabled: true,
-	},
-}
+// Features defines a list of available features. `version` prints them;
+// there are none yet.
+var Features = config.Features{}
