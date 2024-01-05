@@ -2,7 +2,7 @@
 
 | Workflow | Name | Runs on | Does |
 | --- | --- | --- | --- |
-| [ci](#ci) | Continuous integration | PR and push to main (Go files, the embedded `.env`, release config), `v*` tag, monthly, manual | Lint, tests, coverage to Codecov, vulnerabilities, release config |
+| [ci](#ci) | Continuous integration | PR and push to main (Go files, the embedded `.env`, release config), `v*` tag, monthly, manual | Lint, tests, vulnerabilities, release config |
 | [cd](#cd) | Continuous delivery | `v*` tag, manual | Check the tag, test, publish the release, the Homebrew Formula and the module to go.octolab.org; a snapshot on manual runs |
 | [docs](#docs) | Documentation delivery | PR and push to main (`docs/`), monthly, manual, reusable | Build the site; deploy it to Pages from main |
 | [tools](#tools) | Tools validation | PR and push to main (`tools/`), monthly, manual | Install the tools module, check generated code and tool vulnerabilities |
@@ -67,8 +67,7 @@ Nothing here is stored in the repository, so a fresh repository or a fork needs 
    uses the workflow token.
 3. Branch protection of main: require signed commits; `.github/settings.yml`
    cannot set it.
-4. Activate the repository in Codecov; the upload uses OIDC, no `CODECOV_TOKEN`.
-5. Enable the workflows that were disabled by hand, after pushing the YAML that
+4. Enable the workflows that were disabled by hand, after pushing the YAML that
    should run: `gh workflow enable <file> -R octomation/pulse`. The doctor
    reports every workflow that is not active, except those that
    `workflows` in `.github/settings.json` keeps off on purpose, with the
@@ -80,14 +79,14 @@ Do not dispatch the cleanups to try them out: they delete data.
 
 ## ci
 
-[ci.yml](ci.yml) keeps the main branch green and reports coverage.
+[ci.yml](ci.yml) keeps the main branch green.
 
 ```mermaid
 flowchart LR
   lint[lint: golangci-lint]
-  test[test: vet and format, tidy modules, tests, coverage, install check of both binaries] --> report[report: Codecov via OIDC]
+  test[test: vet and format, tidy modules, tests, install check of both binaries]
   vulns[vulns: tool pins, release helpers, settings, goreleaser config, application vulnerabilities, generated code]
-  lint & test & report & vulns --> notify[notify]
+  lint & test & vulns --> notify[notify]
 ```
 
 - Runs on PRs and pushes to main that touch Go code (outside `tools/`),
@@ -98,8 +97,8 @@ flowchart LR
   `.goreleaser.yml`, a broken release helper or hook, or a vulnerable
   dependency fails on main, not on the tag.
 - `vulns` scans the application only; tool vulnerabilities belong to [tools](#tools).
-- Codecov uses GitHub OIDC (`id-token: write`). The repository must be activated
-  in Codecov; no `CODECOV_TOKEN` is needed.
+- Coverage is not reported to any service: `make test-with-coverage-report`
+  shows it locally.
 - PRs get no notification.
 - On both Go versions, `test` installs both binaries, `pulse` and `pulsectl`,
   and runs `version` of each. Makefile builds use the exact tag as their
