@@ -13,24 +13,13 @@ is proven or moved into an issue; a release adds the checks it leaves open
 The workflows, hooks, release helpers, tools module, Makefile and docs site
 come from those two repositories, adapted to two binaries and no agent skill.
 
-- [ ] **After the push to `main`**: `ci`, `tools` and `cd.docs` are green,
-  and the site at <https://pulse.octolab.org/> passes the smoke test of
-  `cd.docs`. If one fails, compare the job with the same job of
-  octopot/indexit before changing it here.
-- [ ] **After the push**: Settings → Pages → Enforce HTTPS is on, as
-  `.github/settings.json` declares; it was off before. Then
-  `make workflow-doctor REASON="after the alignment"` is green: it also
-  proves that the OctoLab Releaser App is installed on `octolab/homebrew-tap`
-  and `octolab/vanity`. If the doctor still lists `caches.yml`, `docs.yml`,
-  `runs.yml`, `stale.yml` or `warmup.yml`, the files the alignment renamed,
-  look at whether GitHub has dropped them from the workflow list.
+- [ ] **When an advisory gets a fixed version**: `tools` fails on
+  GO-2026-6225 and GO-2026-5932, which have none (`Fixed in: N/A`), so the
+  workflow is red on `main`. Look at its last run before the next release;
+  once one of them names a fixed version, update that module in `tools/`.
+- [ ] **Before the next release**: Dependabot has open alerts for
+  `docs/package-lock.json` (zod, minimatch, katex) and `tools/go.mod`
+  (go.opentelemetry.io/otel). None is in the binaries. Update the
+  packages, then check that `make go-tools-check` and the site build pass.
 - [ ] **After the push**: `gh workflow run cd.yml -f reason="snapshot"` on
   `main` builds a snapshot of both binaries and publishes nothing.
-
-## Before the first release
-
-- [ ] octolab/vanity has no entry of `go.octolab.org/toolset/tablo`, the
-  path the module had before it moved to `go.octolab.org/toolset/pulse`, and
-  none of the new path yet: the first stable tag writes it. Check both on
-  octolab/vanity's `main` before that tag; an entry of the new path that
-  names another repository fails the `vanity` job of `cd`.
