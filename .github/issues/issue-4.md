@@ -5,7 +5,7 @@ databaseId: 1756533862
 number: 4
 url: https://github.com/octomation/pulse/issues/4
 title: "core: workflow flags"
-issueType: null
+issueType: Feature
 labels:
   - "type: feature"
   - "scope: code"
@@ -20,27 +20,66 @@ state: OPEN
 stateReason: null
 duplicateOf: null
 createdAt: 2023-06-14T10:10:38Z
-updatedAt: 2023-07-03T17:53:19Z
-lastEditedAt: null
+updatedAt: 2026-11-20T10:13:24Z
+lastEditedAt: 2026-11-20T10:13:24Z
 closedAt: null
 ---
 
 # core: workflow flags
 
-**Motivation:** provide a mechanism to manage actions, e.g., to reduce time on the free tier.
+## Motivation
 
-See octomation/go-module/issues/130.
+A repository created from a template, such as octomation/go-module, starts
+with workflows that fail from scratch (octomation/go-module#130), and some
+workflows I want off for a while, for example to save the minutes of the free
+tier. Today switching a workflow means editing the repository or clicking
+through its settings, one repository at a time.
 
-**Idea**
+I want one place to see and switch the workflows of my repositories.
 
-- create an issue with flags (task list) == workflows of a target repository
-- use it to enable/disable some workflows
-- unsubscribe if issue will be closed
+## PoC
 
-**Alternative**
+```bash
+$ open https://github.com/owner/name/issues/1     # the flags issue of a repository
+- [x] ci
+- [x] cd
+- [ ] docs
+- [x] tools
+```
 
-- run workflow to set some secret or env on a target repository
-- provide on/off value and specified workflow name
+Unchecking `docs` disables that workflow; checking it again enables it.
+
+## Behavior
+
+- A flags issue in a repository lists its workflows as a task list, one
+  item per workflow, checked when it is enabled.
+- pulse watches the flags issues of the configured repositories and, when an
+  item changes, enables or disables that workflow with the GitHub API for
+  disabling and enabling a workflow.
+- A workflow switched in the settings of GitHub is reflected back in the
+  issue, so the issue never lies.
+- Closing the flags issue stops pulse from watching it; the workflows stay
+  as they are.
+
+## Limits
+
+- GitHub Actions only.
+- A workflow added to the repository appears in the issue on the next
+  check; its state is what GitHub says.
+
+## Acceptance criteria
+
+- [ ] Test with a fake GitHub: unchecking an item disables its workflow,
+  checking it enables it.
+- [ ] Test: a workflow disabled in the settings is unchecked in the issue.
+- [ ] Test: a closed flags issue is not watched, and nothing is switched.
+- [ ] The guide in `docs/content/` describes the flags issue.
+
+## Out of scope
+
+- Secrets or variables as switches: the API for disabling a workflow is
+  enough (see the comments).
+- Other CI services.
 
 <!-- 2023-06-14T10:12Z https://github.com/octomation/pulse/issues/4#issuecomment-1590903932
 Research:
