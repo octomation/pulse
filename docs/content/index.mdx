@@ -1,23 +1,166 @@
 ---
-title: All your activity in one view.
-description: pulse is the one point of view to all external activities, starting with GitHub. It is in early development and has no release yet.
+title: Your morning, with a hand on the pulse.
+description: pulse turns the GitHub trends of trendshift.io and github.com into one calm morning paper that shows only what you have not seen. Keep what matters in one click, and read about a repository without leaving the page. Documentation for pulse v0.1.0.
 ---
 
 import Link from 'next/link'
+import { Morning } from '../components/morning'
+import { Reveal } from '../components/reveal'
 
-<div className="home">
-  <section className="hero">
-    <div className="hero-copy">
-      <p className="eyebrow">THE PULSE OF YOUR WORK.</p>
-      <h1>All your activity.<br />In <em>one view.</em></h1>
-      <p className="hero-lead">pulse aims to bring what you do on external services, starting with GitHub, into one place: a service and its client, pulsectl.</p>
-      <div className="hero-actions">
-        <a className="button-primary" href="https://github.com/octomation/pulse">Follow the development <span aria-hidden="true">↗</span></a>
-        <Link className="button-text" href="/changelog/">Changelog <span aria-hidden="true">→</span></Link>
+<div className="pulse-home">
+  <Morning />
+
+  <section className="pulse-feature">
+    <Reveal>
+      <p className="eyebrow">01 / ONLY WHAT IS NEW</p>
+      <h2>Six lists. One paper. Nothing twice.</h2>
+      <p>pulse reads the daily, weekly and monthly trends of trendshift.io and github.com/trending. A repository that is in four lists is one card that names all four, with its place in each.</p>
+      <p>What you marked as seen yesterday, or a month ago, stays out of today’s paper when it trends again. The repositories in most lists open the front page; the rest wait in Today, This week and This month.</p>
+      <Link className="pulse-more" href="/trend-watch/#the-page">How the paper is laid out →</Link>
+    </Reveal>
+    <Reveal className="pulse-tile">
+      <div className="merge">
+        <div className="merge-lists" aria-hidden="true">
+          <div className="merge-list"><span>trendshift daily</span><i className="merge-chip is-a" /><i className="merge-chip is-seen" /><i className="merge-chip is-b" /><i className="merge-chip is-seen" /></div>
+          <div className="merge-list"><span>trendshift weekly</span><i className="merge-chip is-seen" /><i className="merge-chip is-a" /><i className="merge-chip is-seen" /><i className="merge-chip" /></div>
+          <div className="merge-list"><span>trendshift monthly</span><i className="merge-chip is-seen" /><i className="merge-chip is-seen" /><i className="merge-chip is-a" /><i className="merge-chip" /></div>
+          <div className="merge-list"><span>github daily</span><i className="merge-chip is-b" /><i className="merge-chip is-seen" /><i className="merge-chip is-c" /><i className="merge-chip is-seen" /></div>
+          <div className="merge-list"><span>github weekly</span><i className="merge-chip is-seen" /><i className="merge-chip is-c" /><i className="merge-chip is-seen" /><i className="merge-chip" /></div>
+          <div className="merge-list"><span>github monthly</span><i className="merge-chip is-a" /><i className="merge-chip is-seen" /><i className="merge-chip" /><i className="merge-chip is-seen" /></div>
+        </div>
+        <div className="merge-arrow" aria-hidden="true">→</div>
+        <div className="merge-out">
+          <div className="merge-card"><b>owner/first</b><span><i style={{ background: '#e6b7a5' }} />in 4 lists · front page</span></div>
+          <div className="merge-card"><b>owner/second</b><span><i style={{ background: '#b9c9b3' }} />in 2 lists · today</span></div>
+          <div className="merge-card"><b>owner/third</b><span><i style={{ background: '#e8d29a' }} />in 2 lists · this week</span></div>
+        </div>
       </div>
-      <p className="hero-note">Early development · macOS & Linux · Open source, MIT</p>
+      <p className="merge-note">Outlined squares are repositories you have already seen.</p>
+    </Reveal>
+  </section>
+
+  <section className="pulse-feature is-flipped">
+    <Reveal>
+      <p className="eyebrow">02 / THE READER</p>
+      <h2>Read the story without leaving the paper.</h2>
+      <p>Click a repository and it opens beside the paper: the stars, the forks, the open issues, the license, how old it is and when it last moved, its topics, and the README as GitHub renders it.</p>
+      <p>Decide right there. <kbd>j</kbd> and <kbd>k</kbd> turn the pages, <kbd>Esc</kbd> folds the reader away, and opening a story marks nothing.</p>
+      <Link className="pulse-more" href="/trend-watch/#the-reader">The reader →</Link>
+    </Reveal>
+    <Reveal className="pulse-tile">
+      <div className="reader-mock" aria-hidden="true">
+        <div className="reader-mock-paper"><div /><div className="is-open" /><div /><div /></div>
+        <div className="reader-mock-story">
+          <small>GO · IN 2 LISTS</small>
+          <b>LoopForge</b>
+          <em>Self-hosted workflows for coding-agent delivery.</em>
+          <div className="reader-mock-facts">
+            <span>5,109<small>STARS</small></span>
+            <span>708<small>FORKS</small></span>
+            <span>July 2026<small>SINCE</small></span>
+          </div>
+          <div className="reader-mock-readme"><i /><i /><i /><i /></div>
+        </div>
+      </div>
+    </Reveal>
+  </section>
+
+  <section className="pulse-feature">
+    <Reveal>
+      <p className="eyebrow">03 / KEEP WHAT MATTERS</p>
+      <h2>One click. One line in your notebook.</h2>
+      <p>Interesting keeps a repository as a bookmark, with a note on why, if you want one. Skip lets it go. Mark all shown as seen clears the paper when you are done.</p>
+      <p>Your bookmarks come out the way a Safari tab group does, one URL per line, or as JSON lines with your notes, ready for the next tool.</p>
+      <Link className="pulse-more" href="/trend-watch/#export-the-bookmarks">Export the bookmarks →</Link>
+    </Reveal>
+    <Reveal className="pulse-tile">
+      <div className="keep">
+        <div className="keep-note"><b>Tencent/LoopForge</b><p>try it for the CI review of the agents</p></div>
+        <div className="keep-term">
+          <div><span className="p">$</span> pulsectl bookmarks</div>
+          <div>https://github.com/Tencent/LoopForge</div>
+          <div><span className="p">$</span> pulsectl bookmarks --format jsonl</div>
+          <div className="c">{'{"url":"https://github.com/Tencent/LoopForge",'}</div>
+          <div className="c">{' "comment":"try it for the CI review of the agents", …}'}</div>
+        </div>
+      </div>
+    </Reveal>
+  </section>
+
+  <section className="pulse-feature is-flipped">
+    <Reveal>
+      <p className="eyebrow">04 / YOUR VAULT</p>
+      <h2>What you already keep stays out of the way.</h2>
+      <p>Point pulse at the bookmarks directory of your notes vault. A note that names a repository in its <code>url</code> or its <code>aliases</code> hides that repository from the paper.</p>
+      <p>The notes are read again for every page, so a bookmark you add today is respected tomorrow morning. pulse only reads the directory; it never writes there.</p>
+      <Link className="pulse-more" href="/trend-watch/#point-it-at-your-bookmarks">Connect your vault →</Link>
+    </Reveal>
+    <Reveal className="pulse-tile">
+      <div className="vault-mock">
+        <div className="vault-note"><span><b>cobra.md</b></span><span>url: https://github.com/spf13/cobra</span></div>
+        <div className="vault-note"><span><b>uv.md</b></span><span>aliases: [astral-sh/uv]</span></div>
+        <div className="vault-hidden"><b>spf13/cobra</b> trends again · hidden, in the vault: cobra.md</div>
+      </div>
+    </Reveal>
+  </section>
+
+  <section className="pulse-calm">
+    <Reveal>
+      <p className="eyebrow">CALM BY DESIGN</p>
+      <h2>Aware of everything. Hurried by nothing.</h2>
+      <p>pulse is a small service on your own computer. It does not chase you with notifications or counters; it waits for the morning you open it.</p>
+    </Reveal>
+    <div className="calm-grid">
+      <div><svg aria-hidden="true" viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 9h12v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z" /><path d="M16 10h1.5a2.5 2.5 0 0 1 0 5H16" /><path d="M8 3c-.8 1 .8 2 0 3M12 3c-.8 1 .8 2 0 3" /></svg><b>Once an hour, at most</b><span>Opening the page loads a list only when its last load is more than an hour old. Refresh asks now.</span></div>
+      <div><svg aria-hidden="true" viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M7 3h10v18l-5-4-5 4z" /><path d="M10 8h4" /></svg><b>Seen only when you say so</b><span>Opening, reading or refreshing marks nothing. Only Interesting, Skip and Mark all shown as seen do.</span></div>
+      <div><svg aria-hidden="true" viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 11l9-7 9 7" /><path d="M5.5 9.5V20h13V9.5" /><path d="M10 20v-5h4v5" /></svg><b>On your computer</b><span>It listens on 127.0.0.1 and ::1 only, keeps plain files in your home folder, and has no account.</span></div>
+      <div><svg aria-hidden="true" viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7.5v5.5M12 16.2v.1" /></svg><b>Honest about errors</b><span>A list that fails says so, with the reason. It is never a quiet “nothing new”.</span></div>
     </div>
   </section>
 
-  <p className="scope-note">pulse has no release yet: there is nothing to install. Its plans are on <a href="https://github.com/octomation/pulse/issues">GitHub</a>.</p>
+  <section>
+    <Reveal>
+      <p className="eyebrow">THE PAGE ITSELF</p>
+    </Reveal>
+    <div className="pulse-shots">
+      <figure><img src="/screens/paper.png" alt="The pulse page: the masthead, the state of the six lists and the front page with the lead story" loading="lazy" /><figcaption>The front page of a real morning.</figcaption></figure>
+      <figure><img src="/screens/reader.png" alt="The reader beside the paper: the facts of a repository, its topics and its README" loading="lazy" /><figcaption>The reader, open beside the paper.</figcaption></figure>
+    </div>
+  </section>
+
+  <section className="pulse-scope">
+    <div>
+      <p className="eyebrow">IN v0.1.0</p>
+      <ul>
+        <li>Six lists: trendshift.io and github.com/trending, each daily, weekly and monthly</li>
+        <li>One card per repository, without the ones you have seen or keep in your vault</li>
+        <li>The reader with the facts and the README of GitHub</li>
+        <li>Bookmarks with notes, exported as URLs or JSON lines</li>
+        <li>A snapshot of every load, kept across restarts</li>
+      </ul>
+    </div>
+    <div className="is-not">
+      <p className="eyebrow">NOT IN THIS RELEASE</p>
+      <ul>
+        <li>Loads on a schedule, and a digest of the week</li>
+        <li>Other sources than these six lists</li>
+        <li>Writing bookmarks into your vault: export them instead</li>
+        <li>Starting with your computer: you run <code>pulse</code> in a terminal</li>
+      </ul>
+    </div>
+  </section>
+
+  <section className="pulse-install" id="get-pulse">
+    <div>
+      <p className="eyebrow">GET PULSE</p>
+      <h2>Two commands. Then the paper.</h2>
+      <p>Install pulse with Homebrew, start it, and open <a href="http://pulse.localhost:17842/">pulse.localhost:17842</a> with your first coffee.</p>
+    </div>
+    <div className="keep-term">
+      <div><span className="p">$</span> brew install --formula octolab/tap/pulse</div>
+      <div><span className="p">$</span> pulse</div>
+      <div className="c">pulse listens on http://pulse.localhost:17842/</div>
+    </div>
+    <p className="pulse-install-note">Prefer an archive or Go? Get one from the <a href="https://github.com/octomation/pulse/releases/tag/v0.1.0">v0.1.0 release</a>, or run <code>go install go.octolab.org/toolset/pulse/cmd/...@v0.1.0</code>. The <Link href="/trend-watch/">guide</Link> shows how to connect your vault and a GitHub token.</p>
+  </section>
 </div>

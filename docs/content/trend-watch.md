@@ -1,6 +1,6 @@
 ---
 title: Trend watch
-description: A prototype in the pulse repository, with no release yet — one local page at http://pulse.localhost:17842/ with the trending GitHub repositories you have not seen or bookmarked, and pulsectl bookmarks to export the ones you marked as interesting.
+description: One local page at http://pulse.localhost:17842/ with the trending GitHub repositories you have not seen or bookmarked, a reader for each of them, and pulsectl bookmarks to export the ones you marked as interesting.
 ---
 
 # Trend watch
@@ -13,30 +13,25 @@ repositories that are new to you: the ones you have not marked as seen on the
 page and do not keep in your bookmark notes. One click bookmarks a repository,
 and `pulsectl bookmarks` prints what you bookmarked.
 
-Trend watch is a prototype. It is in the
-[pulse repository](https://github.com/octomation/pulse), and pulse has
-[no release](/changelog/): there is no Homebrew formula, archive or version to
-install, so you build it from a checkout. This page describes the prototype as
-it is built today.
+## Install it
 
-## Build it
-
-You need Git, Make and Go 1.27 or later.
+On macOS, with [Homebrew](https://brew.sh/):
 
 ```sh
-git clone https://github.com/octomation/pulse.git
-cd pulse
-make go-build
+brew install --formula octolab/tap/pulse
 ```
 
-`make go-build` builds both binaries, the service `pulse` and its client
-`pulsectl`, into `bin/<os>/<arch>/` of the checkout, named as `uname` reports
-them: `bin/darwin/arm64/` on a Mac with Apple silicon. Add that directory to
-your `PATH` for the session, or call the binaries by their path:
+The Formula installs both binaries, the service `pulse` and its client
+`pulsectl`. On macOS or Linux, on `amd64` or `arm64`, you can also take
+`pulse_0.1.0_<os>-<arch>.tar.gz` from the
+[v0.1.0 release](https://github.com/octomation/pulse/releases/tag/v0.1.0), or
+install with Go 1.27 or later:
 
 ```sh
-export PATH="$PWD/bin/darwin/arm64:$PATH"
+go install go.octolab.org/toolset/pulse/cmd/...@v0.1.0
 ```
+
+Check what you installed with `pulse version`.
 
 ## Point it at your bookmarks
 
@@ -236,12 +231,10 @@ For a service on another port, name it:
 | Loaded lists, marks and bookmarks | The directory `--data-dir` names, else the directory `PULSE_DATA_DIR` names, else `$XDG_DATA_HOME/pulse`, else `~/.local/share/pulse` |
 
 The data are plain files that survive a restart; pulse creates the directory
-when it is not there. Nothing is stored in the checkout, and the bookmarks
-directory is only read.
+when it is not there, and the bookmarks directory is only read.
 
 ## Limits
 
-- It is a prototype without a release: you build it from a checkout.
 - pulse listens on loopback only, `127.0.0.1` and `::1`. It refuses to start
   on any other address and answers only requests addressed to
   `pulse.localhost`, `localhost` or a loopback address.

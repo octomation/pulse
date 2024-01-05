@@ -1,0 +1,21 @@
+/*
+ * pulse brand, loaded after globals.css, which is kept identical to
+ * octopot/indexit. Only the tokens differ: the cream of a morning paper,
+ * coffee for the ink and a soft terracotta for the accent.
+ *
+ * Both blocks restate every token they change: :root and .dark have the same
+ * specificity, so a :root rule here would also win over the dark theme.
+ * Contrast (WCAG): accent 4.8:1 and muted 5.6:1 on the paper; in the dark,
+ * accent 7.4:1 and muted 7.9:1.
+ */
+:root {
+  --paper: #faf6ef; --ink: #2d241f; --muted: #6b5f56; --line: #e8dfd2;
+  --accent: #b0513a; --wash: #f3ebdf; --card: #fffcf6;
+  --sage: #7d8f78; --latte: #c9a27e; --cream: #f6eddf; --shadow: 64 44 28;
+}
+.dark {
+  --paper: #18140f; --ink: #f1e8db; --muted: #b8aa99; --line: #352d25;
+  --accent: #eaa083; --wash: #221c16; --card: #1d1813;
+  --sage: #a5b59f; --latte: #c9a27e; --cream: #2a231c; --shadow: 0 0 0;
+}
+::selection { background: #f3d2c3; color: #2d241f; }

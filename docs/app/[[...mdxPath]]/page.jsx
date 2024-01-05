@@ -14,7 +14,7 @@ export async function generateMetadata({ params }) {
     url: `${siteUrl}og.png`,
     width: 1733,
     height: 908,
-    alt: 'pulse — All your activity in one view.',
+    alt: 'pulse — Your morning, with a hand on the pulse.',
   }]
   return {
     ...page.metadata,

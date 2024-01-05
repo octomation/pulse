@@ -198,24 +198,22 @@ no prerelease note in it.
 
 ### 2. Social preview image
 
-`docs/public/og.png` is a placeholder labelled `unreleased` until the first
-release. That release regenerates it as
-[docs/README.md](docs/README.md#social-preview-image) describes and records
-the geometry of its version label there.
+`docs/public/og.png` is rendered from `docs/scripts/og.html` by
+`docs/scripts/og.mjs`, as [docs/README.md](docs/README.md#social-preview-image)
+describes; the geometry of its version label is recorded there.
 
-From then on, patch only the changed characters of the label, don't
-regenerate the image or resize or requantize it: work on an untouched RGB
-copy at native resolution, cover each changed cell with background copied
-from a clean donor strip at the same rows, copy a new glyph from the
-untouched label where it is there, and diff the result against the original:
-only the editing box may change. The procedure, with its Pillow check, is
-step 2 of octopot/indexit's AGENTS.md. Save the result as RGB PNG
-(`optimize=True, compress_level=9`). The site is the only user of this file.
+A release changes only the text of the version label in `og.html` and renders
+it again. Then diff the result against the previous image on an RGB copy at
+native resolution: only the box of the label may change. If anything else
+moved, a font or the browser rendered differently: keep the previous image
+and patch the changed characters of its label instead, as step 2 of
+octopot/indexit's AGENTS.md describes. The site is the only user of this
+file.
 
-A prerelease doesn't change the image. Regenerate it in full only when the
-wordmark, the slogan, the monospaced line or the brand colors change, then
-update `width`, `height` and `alt` in `docs/app/[[...mdxPath]]/page.jsx` if
-they changed.
+A prerelease doesn't change the image. Change the rest of `og.html` only when
+the wordmark, the slogan, the monospaced line, the desk or the brand colors
+change, then update `width`, `height` and `alt` in
+`docs/app/[[...mdxPath]]/page.jsx` if they changed.
 
 ### 3. Tag annotation
 

@@ -29,9 +29,6 @@ come from those two repositories, adapted to two binaries and no agent skill.
 
 ## Before the first release
 
-- [ ] `docs/public/og.png` is a placeholder labelled `unreleased`: regenerate
-  it as [docs/README.md](../docs/README.md#social-preview-image) describes,
-  and record the geometry of its version label there.
 - [ ] octolab/vanity has no entry of `go.octolab.org/toolset/tablo`, the
   path the module had before it moved to `go.octolab.org/toolset/pulse`, and
   none of the new path yet: the first stable tag writes it. Check both on

@@ -19,10 +19,10 @@ brews:
     skip_upload: auto
     commit_author:
       use_github_app_token: true
-    description: The pulse service and its client, pulsectl.
+    description: Morning paper of the GitHub trends that shows only what is new
     license: MIT
     directory: Formula
-    homepage: https://github.com/octomation/pulse
+    homepage: https://pulse.octolab.org/
     repository:
       owner: octolab
       name: homebrew-tap

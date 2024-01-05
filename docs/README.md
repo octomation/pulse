@@ -1,6 +1,6 @@
 # pulse documentation
 
-An English site for pulse, built on the Nextra 4 / Next.js stack shared with octopot/indexit and octomation/maintainer. pulse has no release yet: the site introduces the project and keeps the changelog its releases will fill.
+An English site for pulse v0.1.0: a landing page with an isometric morning desk that plays as the page scrolls, the trend-watch guide and the changelog. Nextra 4 on Next.js, the stack shared with octopot/indexit and octomation/maintainer.
 
 ## Run locally
 
@@ -36,15 +36,21 @@ Static output is written to `docs/dist/`. `SITE_URL` is required; add `BASE_PATH
 
 | Location | Purpose |
 | --- | --- |
-| `content/index.mdx` | Product introduction |
-| `content/trend-watch.md` | Trend watch: the prototype page at `pulse.localhost`, built from a checkout |
+| `content/index.mdx` | The landing page |
+| `components/morning.jsx` | The first screen of the landing page: the isometric desk in CSS 3D and the five steps of a morning. The script writes the scroll and the pointer into custom properties; the motion is CSS in `app/landing.css` |
+| `components/reveal.jsx` | Fades a block in when it scrolls into view |
+| `content/trend-watch.md` | Trend watch: install, the page, the reader, the export and the limits |
 | `content/changelog/index.mdx` | Release overview |
+| `content/changelog/v0.1.0.md` | The latest release notes, also the GitHub release body |
 | `content/**/_meta.js` | Navigation order and labels |
 | `navigation.mjs` | Release groups in the sidebar; keeps published release URLs unchanged |
-| `app/globals.css` | Shared colors, responsive layouts, and landing page styles |
+| `app/globals.css` | Shared layouts, kept identical to octopot/indexit |
+| `app/brand.css` | The tokens of pulse: paper, coffee ink, terracotta accent |
+| `app/landing.css` | The landing page and the desk: its boxes, the objects and what each step moves |
 | `app/layout.jsx` | Site identity and Nextra theme |
 | `app/[[...mdxPath]]/page.jsx` | Page-specific titles and social metadata |
-| `public/` | Favicon and social preview (see [below](#social-preview-image)) |
+| `public/` | Favicon, social preview (see [below](#social-preview-image)) and the screenshots of the page in `screens/` |
+| `scripts/og.html`, `scripts/og.mjs` | The source of `og.png` and its renderer |
 
 The public origin in metadata comes from `SITE_URL` (see `site.mjs`); the Pages workflow sets it from the Pages configuration. Internal links use Next.js/Nextra and keep the configured base path.
 
@@ -52,9 +58,15 @@ Changelog is a section of the sidebar, with All releases first. `navigation.mjs`
 
 ## Social preview image
 
-`public/og.png`, 1733×908, is the social preview of the home page; other pages share a link without an image (`app/[[...mdxPath]]/page.jsx`). On warm off-white paper, it shows the `pulse` wordmark in heavy lowercase ink with a red square dot, the slogan "All your activity. In one view.", the monospaced line "GitHub today. Every service tomorrow." and the red label `unreleased` at the bottom left. On the right, a thin frame holds a heartbeat line.
+`public/og.png`, 1733×908 RGB, is the social preview of the home page; other pages share a link without an image (`app/[[...mdxPath]]/page.jsx`). On warm paper it shows the `📰 pulse` wordmark, the slogan "Your morning, with a hand on the pulse." with "the pulse." in terracotta italics, the monospaced line "Only what is new. One calm morning paper." and the version label at the bottom left. On the right is the desk of the landing page, held still at 07:35: the paper, a story risen above it, the coffee, the clock and the glasses.
 
-It is a placeholder, rendered from HTML in the layout of the octopot/indexit and octomation/maintainer previews. Before the first release, regenerate it with Codex `gpt-6-astra` at `high` effort and image generation, from the description above with the version in place of `unreleased`; post-process it to 1733×908 RGB, then measure the version label and record its geometry here, as octopot/indexit's `docs/README.md` does. From then on, each release patches only the changed characters of the label ([AGENTS.md](../AGENTS.md#releasing)).
+`scripts/og.html` holds the `.iso-stage` element as the build renders it, inside a `.morning` element whose custom properties (`--p1`…`--p5`, `--day`, `--s`) fix the moment, and uses the styles of `app/brand.css` and `app/landing.css`. Render it with headless Chrome, with a copy of `playwright-core` the script can import:
+
+```sh
+PLAYWRIGHT_CORE=/path/to/playwright-core/index.js node scripts/og.mjs
+```
+
+The version label `v0.1.0` is set in `ui-monospace` (Menlo on macOS), weight 600, 26 px, colour `#b0513a`; its box is x 96, y 818, 94×26 px. A release changes only the text of `.version` in `og.html` and renders again; the script prints the box of the label. Compare the result with the previous image: only the pixels inside that box may change, so a longer version that widens the box needs the same check. When the desk changes, copy `.iso-stage` from `dist/index.html` again and set the time on the clock to the step shown.
 
 ## Change the domain
 
@@ -70,7 +82,7 @@ The docs build stops while the two disagree, the deployment is smoke-tested, and
 
 The implementation is the source of truth: check examples against command help and tests. Closed issues provide context, not a substitute for checking the current code.
 
-Lead installation instructions with Homebrew and release binaries; keep source builds as an optional contributor workflow. Archive names and supported platforms must match `.goreleaser.yml`. Do not describe planned features as shipped.
+Lead installation instructions with Homebrew and release binaries; keep source builds as an optional contributor workflow. Archive names and supported platforms must match `.goreleaser.yml`. Do not describe planned features as shipped. The current release is v0.1.0.
 
 Release notes describe changes to pulse's behavior. Keep documentation, development tools, CI/CD, and repository inventory changes out of the product changelog. A release note describes its release as published, with examples that reproduce on the built binaries. Preserve historical release notes when updating the current installation instructions. How to write a note and cut a release: [AGENTS.md](../AGENTS.md#releasing).
 

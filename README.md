@@ -1,16 +1,18 @@
 > # 📰 pulse
 >
-> The one point of view to all external activities.
+> Your morning, with a hand on the pulse.
 
-**All your activity. In one view.**
+**Only what is new. One calm morning paper.**
 
-pulse aims to bring what you do on external services, starting with GitHub, into one place. It comes as a service, `pulse`, and its client, `pulsectl`; neither collects any activity yet.
+pulse folds the daily, weekly and monthly GitHub trends of [trendshift.io](https://trendshift.io/) and [github.com/trending](https://github.com/trending) into one page on your computer that shows only the repositories you have not seen yet. Read a repository without leaving the page, keep what matters with a comment, and export your bookmarks with `pulsectl`.
 
-## Status
+```sh
+brew install --formula octolab/tap/pulse
+pulse                      # then open http://pulse.localhost:17842/
+pulsectl bookmarks         # the repositories you kept, one URL per line
+```
 
-pulse is in early development and has no release yet: there is nothing to install. The plans are in the [issues](https://github.com/octomation/pulse/issues): a port of [gitboard](https://gitboard.io) and of [watchub](https://github.com/octomation/watchub), and a rethink of [tablo](https://github.com/octopot/tablo).
-
-Once released, pulse installs with [Homebrew](https://brew.sh/) as `brew install --formula octolab/tap/pulse`, or from a release archive for macOS and Linux on `amd64` and `arm64`.
+The current release is [v0.1.0](https://pulse.octolab.org/changelog/v0.1.0/), for macOS and Linux on `amd64` and `arm64`; archives are on the [release page](https://github.com/octomation/pulse/releases/tag/v0.1.0). The [guide](https://pulse.octolab.org/trend-watch/) shows how to connect the bookmarks of your notes vault and a GitHub token.
 
 ## Development
 
@@ -28,7 +30,7 @@ source bin/activate
 pulse version
 ```
 
-`make setup` wires the git hooks in `.github/hooks` and installs the development tools into `bin/<os>/<arch>`, where `make install` puts both binaries and `source bin/activate` adds them to `PATH`; `make help` lists the other targets. The module path is `go.octolab.org/toolset/pulse`, the project's former name.
+`make setup` wires the git hooks in `.github/hooks` and installs the development tools into `bin/<os>/<arch>`, where `make install` puts both binaries and `source bin/activate` adds them to `PATH`; `make help` lists the other targets. The module path is `go.octolab.org/toolset/pulse`.
 
 </details>
 
