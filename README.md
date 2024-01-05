@@ -8,11 +8,11 @@ pulse folds the daily, weekly and monthly GitHub trends of [trendshift.io](https
 
 ```sh
 brew install --formula octolab/tap/pulse
-pulse                      # then open http://pulse.localhost:17842/
-pulsectl bookmarks         # the repositories you kept, one URL per line
+brew services start octolab/tap/pulse   # then open http://pulse.localhost:17842/
+pulsectl bookmarks                      # the repositories you kept, one URL per line
 ```
 
-The current release is [v0.1.0](https://pulse.octolab.org/changelog/v0.1.0/), for macOS and Linux on `amd64` and `arm64`; archives are on the [release page](https://github.com/octomation/pulse/releases/tag/v0.1.0). The [guide](https://pulse.octolab.org/trend-watch/) shows how to connect the bookmarks of your notes vault and a GitHub token.
+The current release is [v0.1.1](https://pulse.octolab.org/changelog/v0.1.1/), for macOS and Linux on `amd64` and `arm64`; archives are on the [release page](https://github.com/octomation/pulse/releases/tag/v0.1.1). The [guide](https://pulse.octolab.org/trend-watch/) shows how to connect the bookmarks of your notes vault and a GitHub token.
 
 ## Development
 

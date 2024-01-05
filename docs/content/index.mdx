@@ -1,6 +1,6 @@
 ---
 title: Your morning, with a hand on the pulse.
-description: pulse turns the GitHub trends of trendshift.io and github.com into one calm morning paper that shows only what you have not seen. Keep what matters in one click, and read about a repository without leaving the page. Documentation for pulse v0.1.0.
+description: pulse turns the GitHub trends of trendshift.io and github.com into one calm morning paper that shows only what you have not seen. Keep what matters in one click, and read about a repository without leaving the page. Documentation for pulse v0.1.1.
 ---
 
 import Link from 'next/link'
@@ -130,13 +130,14 @@ import { Reveal } from '../components/reveal'
 
   <section className="pulse-scope">
     <div>
-      <p className="eyebrow">IN v0.1.0</p>
+      <p className="eyebrow">IN v0.1.1</p>
       <ul>
         <li>Six lists: trendshift.io and github.com/trending, each daily, weekly and monthly</li>
         <li>One card per repository, without the ones you have seen or keep in your vault</li>
         <li>The reader with the facts and the README of GitHub</li>
         <li>Bookmarks with notes, exported as URLs or JSON lines</li>
         <li>A snapshot of every load, kept across restarts</li>
+        <li>A background service on macOS: start it once with Homebrew, and it is there at every login</li>
       </ul>
     </div>
     <div className="is-not">
@@ -145,7 +146,7 @@ import { Reveal } from '../components/reveal'
         <li>Loads on a schedule, and a digest of the week</li>
         <li>Other sources than these six lists</li>
         <li>Writing bookmarks into your vault: export them instead</li>
-        <li>Starting with your computer: you run <code>pulse</code> in a terminal</li>
+        <li>A background service on Linux: you run <code>pulse</code> in a terminal</li>
       </ul>
     </div>
   </section>
@@ -154,13 +155,13 @@ import { Reveal } from '../components/reveal'
     <div>
       <p className="eyebrow">GET PULSE</p>
       <h2>Two commands. Then the paper.</h2>
-      <p>Install pulse with Homebrew, start it, and open <a href="http://pulse.localhost:17842/">pulse.localhost:17842</a> with your first coffee.</p>
+      <p>Install pulse with Homebrew, start its service once, and open <a href="http://pulse.localhost:17842/">pulse.localhost:17842</a> with your first coffee. It is there every morning after that.</p>
     </div>
     <div className="keep-term">
       <div><span className="p">$</span> brew install --formula octolab/tap/pulse</div>
-      <div><span className="p">$</span> pulse</div>
-      <div className="c">pulse listens on http://pulse.localhost:17842/</div>
+      <div><span className="p">$</span> brew services start octolab/tap/pulse</div>
+      <div className="c">open http://pulse.localhost:17842/</div>
     </div>
-    <p className="pulse-install-note">Prefer an archive or Go? Get one from the <a href="https://github.com/octomation/pulse/releases/tag/v0.1.0">v0.1.0 release</a>, or run <code>go install go.octolab.org/toolset/pulse/cmd/...@v0.1.0</code>. The <Link href="/trend-watch/">guide</Link> shows how to connect your vault and a GitHub token.</p>
+    <p className="pulse-install-note">Prefer an archive or Go? Get one from the <a href="https://github.com/octomation/pulse/releases/tag/v0.1.1">v0.1.1 release</a>, or run <code>go install go.octolab.org/toolset/pulse/cmd/...@v0.1.1</code>, and start <code>pulse</code> in a terminal. The <Link href="/trend-watch/">guide</Link> shows how to connect your vault and a GitHub token.</p>
   </section>
 </div>
