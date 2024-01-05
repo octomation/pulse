@@ -16,13 +16,13 @@ assignees:
 milestone: null
 parent: null
 issueFields: {}
-state: OPEN
-stateReason: null
+state: CLOSED
+stateReason: COMPLETED
 duplicateOf: null
 createdAt: 2026-11-20T04:31:06Z
-updatedAt: 2026-11-20T07:12:53Z
+updatedAt: 2026-11-20T07:43:24Z
 lastEditedAt: 2026-11-20T07:12:53Z
-closedAt: null
+closedAt: 2026-11-20T07:43:24Z
 ---
 
 # core: trend-watch without repeats

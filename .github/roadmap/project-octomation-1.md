@@ -130,10 +130,10 @@ closedAt: null
 - [ ] octomation/maintainer#50 — command: separate command structure and command execution
 - [ ] octomation/maintainer#51 — di: define service provider to inject it into command for lazy service initialization
 - [ ] octomation/maintainer#522 — github: contribution: lose no contribution at the edges of the monthly slices
-- [ ] [[issue-85]] — core: trend-watch without repeats
 
 ## Done
 
+- [x] [[issue-85]] — core: trend-watch without repeats
 - [x] octomation/maintainer#33 — provide github access token by command flag
 - [x] octomation/maintainer#26 — implement github contribution lookup command
 - [x] octomation/maintainer#38 — github: contribution: lookup shows incorrect scope for 1 week with now ts
