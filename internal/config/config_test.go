@@ -119,6 +119,13 @@ func TestLoad(t *testing.T) {
 		assert.Contains(t, err.Error(), "vault.bookmark")
 	})
 
+	t.Run("the token of GitHub is read without the space around it", func(t *testing.T) {
+		file, err := Load(write(t, "[github]\ntoken = \" a-token \"\n"), home)
+		require.NoError(t, err)
+		assert.Equal(t, "a-token", file.GitHub.Token)
+		assert.Empty(t, file.Vault.Bookmarks)
+	})
+
 	t.Run("a wrong type is an error", func(t *testing.T) {
 		_, err := Load(write(t, "[vault]\nbookmarks = 42\n"), home)
 		assert.Error(t, err)

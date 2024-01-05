@@ -28,17 +28,22 @@ const grace = 5 * time.Second
 var newLoader = func() watch.Loader { return source.NewLoader(source.Sites()) }
 
 // newDetails returns what asks GitHub about a repository for the reader,
-// with the token of the environment when there is one. The tests replace
+// with the token of the environment or the configuration when there is one.
+// The tests replace
 // it, so they never use the network.
 var newDetails = func(token string) web.Details { return details.New(details.Options{Token: token}) }
 
-// token returns the GitHub token of the environment and the variable that
-// holds it.
-func token(getenv func(string) string) (value, name string) {
+// token returns the GitHub token and where it comes from: a variable of the
+// environment first, as a shell has it, then the configuration, which is all
+// a background service has.
+func token(getenv func(string) string, file config.File) (value, source string) {
 	for _, name := range []string{"GITHUB_TOKEN", "GH_TOKEN"} {
 		if value := getenv(name); value != "" {
 			return value, name
 		}
+	}
+	if file.GitHub.Token != "" {
+		return file.GitHub.Token, "the config " + file.Path
 	}
 	return "", ""
 }
@@ -65,12 +70,15 @@ func NewServer() *cobra.Command {
 			"\n" +
 			"A click on a repository opens it in the reader of the same page, with the\n" +
 			"facts and the README of GitHub. pulse asks api.github.com for them when a\n" +
-			"repository is opened, with the token of GITHUB_TOKEN or GH_TOKEN when one is\n" +
-			"set; without a token GitHub allows about 30 repositories an hour.\n" +
+			"repository is opened, with the token of GITHUB_TOKEN or GH_TOKEN, else the\n" +
+			"token of the configuration; without one GitHub allows about 30 repositories an\n" +
+			"hour.\n" +
 			"\n" +
 			"The service runs as your user and listens on loopback only, 127.0.0.1 and ::1;\n" +
 			"it refuses any other address. A default address the system lacks, as ::1 with\n" +
-			"IPv6 turned off, is skipped. SIGINT or SIGTERM stops it.\n" +
+			"IPv6 turned off, is skipped. SIGINT or SIGTERM stops it. Installed with\n" +
+			"Homebrew, `brew services start octolab/tap/pulse` keeps it running in the\n" +
+			"background.\n" +
 			"\n" +
 			"Configuration: the file " + config.EnvConfig + " names, else\n" +
 			"$XDG_CONFIG_HOME/pulse/config.toml, else ~/.config/pulse/config.toml. It names\n" +
@@ -79,6 +87,12 @@ func NewServer() *cobra.Command {
 			"\n" +
 			"  [vault]\n" +
 			"  bookmarks = \"~/path/to/Bookmarks/GitHub\"\n" +
+			"\n" +
+			"and the GitHub token of the reader, which a background service cannot take\n" +
+			"from your shell:\n" +
+			"\n" +
+			"  [github]\n" +
+			"  token = \"...\"\n" +
 			"\n" +
 			"Without the file the vault filter is off. Snapshots, marks and bookmarks are\n" +
 			"plain files in the directory " + config.EnvDataDir + " names, else\n" +
@@ -128,7 +142,7 @@ func NewServer() *cobra.Command {
 				return err
 			}
 			service := watch.New(watch.Options{Store: state, Loader: newLoader(), Vault: file.Vault.Bookmarks})
-			secret, variable := token(os.Getenv)
+			secret, origin := token(os.Getenv, file)
 			handler, err := web.NewHandler(web.Options{Service: service, Context: ctx, Details: newDetails(secret)})
 			if err != nil {
 				for _, listener := range listeners {
@@ -153,8 +167,8 @@ func NewServer() *cobra.Command {
 			default:
 				_, _ = fmt.Fprintf(out, "vault: not configured (no config at %s)\n", file.Path)
 			}
-			if variable != "" {
-				_, _ = fmt.Fprintf(out, "github: the reader asks api.github.com with the token of %s\n", variable)
+			if origin != "" {
+				_, _ = fmt.Fprintf(out, "github: the reader asks api.github.com with the token of %s\n", origin)
 			} else {
 				_, _ = fmt.Fprintln(out, "github: the reader asks api.github.com without a token, about 30 repositories an hour")
 			}

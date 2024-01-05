@@ -83,6 +83,13 @@ type Vault struct {
 	Bookmarks string `toml:"bookmarks"`
 }
 
+// GitHub is the [github] table of the configuration.
+type GitHub struct {
+	// Token is sent to api.github.com by the reader. The token of the
+	// environment comes first; empty asks anonymously.
+	Token string `toml:"token"`
+}
+
 // File is the configuration of pulse.
 type File struct {
 	// Path is where the configuration was looked for.
@@ -90,7 +97,8 @@ type File struct {
 	// Found says whether a file was there; pulse runs without one.
 	Found bool `toml:"-"`
 
-	Vault Vault `toml:"vault"`
+	Vault  Vault  `toml:"vault"`
+	GitHub GitHub `toml:"github"`
 }
 
 // Load reads the configuration file. A missing file is an empty
@@ -110,6 +118,7 @@ func Load(path, home string) (File, error) {
 	if err := toml.NewDecoder(bytes.NewReader(raw)).DisallowUnknownFields().Decode(&file); err != nil {
 		return file, fmt.Errorf("config %s: %s", path, explain(err))
 	}
+	file.GitHub.Token = strings.TrimSpace(file.GitHub.Token)
 	if dir := strings.TrimSpace(file.Vault.Bookmarks); dir != "" {
 		dir = Expand(dir, home)
 		if !filepath.IsAbs(dir) {

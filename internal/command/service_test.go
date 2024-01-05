@@ -216,7 +216,7 @@ func TestBookmarksThroughTheCommands(t *testing.T) {
 		stdout, stderr, err := client(t, "bookmarks", "--addr", service.addr)
 		require.Error(t, err)
 		assert.Empty(t, stdout)
-		assert.Equal(t, "the pulse service is not running at "+service.addr+": start it with `pulse`", err.Error())
+		assert.Equal(t, "the pulse service is not running at "+service.addr+": start it with `brew services start octolab/tap/pulse`, or run `pulse`", err.Error())
 		assert.Equal(t, "Error: "+err.Error()+"\n", stderr, "one line, and no usage")
 	})
 
@@ -392,6 +392,28 @@ func TestClientArguments(t *testing.T) {
 		assert.Contains(t, stdout, "--addr")
 		assert.Contains(t, stdout, "http://pulse.localhost:17842")
 		assert.NotContains(t, stdout, "%template%")
+	})
+}
+
+// The token of the configuration is what a background service has; the
+// environment comes first. Neither is printed.
+func TestServerTakesTheTokenOfTheConfig(t *testing.T) {
+	home := isolate(t)
+	path := filepath.Join(home, "config", "pulse", "config.toml")
+	require.NoError(t, os.MkdirAll(filepath.Dir(path), 0o700))
+	require.NoError(t, os.WriteFile(path, []byte("[github]\ntoken = \"a-secret-of-the-config\"\n"), 0o600))
+	t.Cleanup(SetLoader(watchtest.NewLoader()))
+
+	t.Run("without a variable", func(t *testing.T) {
+		service := serve(t, "--listen", "127.0.0.1:0")
+		assert.Contains(t, service.stdout.String(), "github: the reader asks api.github.com with the token of the config "+path+"\n")
+		assert.NotContains(t, service.stdout.String(), "a-secret-of-the-config")
+	})
+
+	t.Run("a variable comes first", func(t *testing.T) {
+		t.Setenv("GITHUB_TOKEN", "a-secret-of-the-test")
+		service := serve(t, "--listen", "127.0.0.1:0")
+		assert.Contains(t, service.stdout.String(), "github: the reader asks api.github.com with the token of GITHUB_TOKEN\n")
 	})
 }
 

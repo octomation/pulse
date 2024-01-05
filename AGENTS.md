@@ -30,11 +30,13 @@ both into `bin/<os>/<arch>/`.
 
 ## Local services
 
-`pulse` is a local service, started by hand for now. It follows the
-convention of octopot/indexit and octomation/maintainer: it listens on
-loopback only, on `127.0.0.1` and `::1`, and answers at
-`http://pulse.localhost:17842/`. `brew services` does not run it yet; when it
-does, it runs it as the user, without root.
+`pulse` is a local service. It follows the convention of octopot/indexit and
+octomation/maintainer: it listens on loopback only, on `127.0.0.1` and `::1`,
+and answers at `http://pulse.localhost:17842/`. The Formula carries its
+service block: `brew services start octolab/tap/pulse` runs it as the user,
+without root, with the log in `$(brew --prefix)/var/log/pulse.log`.
+Installing the Formula does not start it. Under launchd the service has no
+shell environment, so what it needs comes from `~/.config/pulse/config.toml`.
 
 | Port | Service |
 | --- | --- |
@@ -293,6 +295,9 @@ gh api repos/octolab/vanity/commits/pulse--vX.Y.Z -q '.commit.verification.verif
   `pulsectl version`, not by a successful download alone: the archives,
   `bin/install` with the tag, `go install`, and Homebrew:
   `brew update && brew upgrade --formula octolab/tap/pulse`.
+- After the upgrade, `brew services restart octolab/tap/pulse`; the page at
+  `http://pulse.localhost:17842/` answers `200` and the log names the new
+  start.
 - The site shows the new changelog page and release band once `cd.docs`
   finishes for the release commit.
 - Criteria ticked by the release commit go to GitHub; the server fields it

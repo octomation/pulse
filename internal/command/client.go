@@ -84,7 +84,7 @@ func newBookmarks() *cobra.Command {
 			if err != nil {
 				var dial *net.OpError
 				if errors.As(err, &dial) && dial.Op == "dial" {
-					return fmt.Errorf("the pulse service is not running at %s: start it with `pulse`", addr)
+					return fmt.Errorf("the pulse service is not running at %s: start it with `brew services start octolab/tap/pulse`, or run `pulse`", addr)
 				}
 				return fmt.Errorf("the pulse service at %s did not answer: %w", addr, err)
 			}

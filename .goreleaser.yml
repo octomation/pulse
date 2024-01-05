@@ -11,7 +11,9 @@ archives:
     name_template: "{{.ProjectName}}_{{.Version}}_{{.Os}}-{{.Arch}}"
 
 # brews is deprecated upstream, but it is the only GoReleaser generator of a
-# Formula: one package for the service and its client, as octopot/indexit and
+# Formula, not a Cask: `brews` is deprecated upstream, but pulse ships as a
+# Formula, and only a Formula has the service block that brew services runs:
+# one package for the service and its client, as octopot/indexit and
 # octomation/maintainer ship theirs. Keep GoReleaser pinned in CI.
 brews:
   - name: pulse
@@ -33,8 +35,22 @@ brews:
       bin.install "pulsectl"
       generate_completions_from_executable(bin/"pulsectl", "completion")
       prefix.install_metafiles
+    service: |
+      run macos: [opt_bin/"pulse"]
+      keep_alive true
+      working_dir Dir.home
+      log_path var/"log/pulse.log"
+      error_log_path var/"log/pulse.log"
+    caveats: |
+      Start the local service as your normal user:
+        brew services start octolab/tap/pulse
+      Then open http://pulse.localhost:17842/
+      The service does not see the variables of your shell: the GitHub token
+      of the reader goes into ~/.config/pulse/config.toml, as
+      https://pulse.octolab.org/trend-watch/ shows.
     test: |
       system "#{bin}/pulse", "version"
+      system "#{bin}/pulse", "--help"
       system "#{bin}/pulsectl", "version"
 
 builds:

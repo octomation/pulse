@@ -224,11 +224,11 @@ func (c *Client) get(ctx context.Context, path, accept string) ([]byte, error) {
 	case response.StatusCode == http.StatusTooManyRequests,
 		response.StatusCode == http.StatusForbidden && response.Header.Get("X-RateLimit-Remaining") == "0":
 		if c.token == "" {
-			return nil, fmt.Errorf("%w: without a token it allows 60 an hour; start pulse with GITHUB_TOKEN", ErrRateLimited)
+			return nil, fmt.Errorf("%w: without a token it allows 60 an hour; give pulse one in GITHUB_TOKEN or in the [github] table of its configuration", ErrRateLimited)
 		}
 		return nil, ErrRateLimited
 	case response.StatusCode == http.StatusUnauthorized:
-		return nil, errors.New("GitHub does not accept the token of GITHUB_TOKEN")
+		return nil, errors.New("GitHub does not accept the token pulse was given")
 	default:
 		return nil, fmt.Errorf("GitHub answered %s", response.Status)
 	}
