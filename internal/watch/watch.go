@@ -13,6 +13,7 @@ import (
 	"sync"
 	"time"
 
+	"go.octolab.org/toolset/pulse/internal/config"
 	"go.octolab.org/toolset/pulse/internal/hide"
 	"go.octolab.org/toolset/pulse/internal/store"
 	"go.octolab.org/toolset/pulse/internal/trend"
@@ -45,6 +46,12 @@ type Options struct {
 	// Hide asks the sources that may hide a card, such as the vault; none
 	// hides nothing.
 	Hide hide.Facade
+	// Snooze is how long "Skip" and "Mark all shown as seen" hide a
+	// repository; zero is config.DefaultSnooze.
+	Snooze config.Period
+	// Location is the time zone of the calendar the snooze is counted in;
+	// nil is local.
+	Location *time.Location
 	// Now is the clock; nil is time.Now.
 	Now func() time.Time
 	// Timeout bounds the load of a list; zero is Timeout.
@@ -53,11 +60,13 @@ type Options struct {
 
 // Service is trend-watch.
 type Service struct {
-	store   *store.Store
-	loader  Loader
-	hide    hide.Facade
-	now     func() time.Time
-	timeout time.Duration
+	store    *store.Store
+	loader   Loader
+	hide     hide.Facade
+	snooze   config.Period
+	location *time.Location
+	now      func() time.Time
+	timeout  time.Duration
 
 	// loading serializes the loads: a second page waits for the first and
 	// then finds the lists fresh.
@@ -75,7 +84,13 @@ type Service struct {
 
 // New returns the service.
 func New(o Options) *Service {
-	s := &Service{store: o.Store, loader: o.Loader, hide: o.Hide, now: o.Now, timeout: o.Timeout}
+	s := &Service{store: o.Store, loader: o.Loader, hide: o.Hide, snooze: o.Snooze, now: o.Now, timeout: o.Timeout}
+	if s.snooze == (config.Period{}) {
+		s.snooze = config.DefaultSnooze
+	}
+	if s.location = o.Location; s.location == nil {
+		s.location = time.Local
+	}
 	if s.now == nil {
 		s.now = time.Now
 	}
@@ -87,6 +102,10 @@ func New(o Options) *Service {
 
 // clock returns the time of a record: UTC, to the second.
 func (s *Service) clock() time.Time { return s.now().UTC().Truncate(time.Second) }
+
+// Snooze returns how long "Skip" and "Mark all shown as seen" hide a
+// repository.
+func (s *Service) Snooze() config.Period { return s.snooze }
 
 // Open loads the lists whose last attempt, successful or not, is more than
 // an hour old or was never made, waits for them, and returns the view. It
@@ -269,8 +288,8 @@ func reason(list trend.List, err error) string {
 	return text
 }
 
-// Mark records "Interesting" or "Skip" for a repository: it becomes seen,
-// and "Interesting" bookmarks it with the comment. The record is on disk
+// Mark records "Interesting" or "Skip" for a repository: "Interesting"
+// bookmarks it with the comment, "Skip" snoozes it. The record is on disk
 // when Mark returns nil; when it cannot be written, Mark fails and the
 // repository stays as it was. It loads nothing.
 func (s *Service) Mark(action store.Action, repo trend.Repo, comment string) error {
@@ -288,15 +307,16 @@ func (s *Service) Mark(action store.Action, repo trend.Repo, comment string) err
 }
 
 // MarkSeen records "Mark all shown as seen" for exactly the repositories the
-// page showed: one write for all of them. A repository that is seen already
-// gets no second mark. It loads nothing and returns the number it marked.
+// page showed: one write for all of them. A repository that the marks hide
+// already gets no second mark. It loads nothing and returns the number it
+// marked.
 func (s *Service) MarkSeen(repos []trend.Repo) (int, error) {
+	now := s.clock()
 	seen := map[string]bool{}
-	for _, mark := range s.store.Marks() {
-		seen[mark.Repo.Key()] = true
+	for key := range s.marks(now).seen {
+		seen[key] = true
 	}
 	current := s.memberships()
-	now := s.clock()
 	var marks []store.Mark
 	for _, repo := range repos {
 		if seen[repo.Key()] {

@@ -53,11 +53,14 @@ type Membership struct {
 	Rank int
 }
 
-// SeenReason hides a repository that was marked: when and by which action,
-// the first time.
+// SeenReason hides a repository that was marked. A bookmark hides it for
+// good, since the first "Interesting"; "Skip" and "Mark all shown as seen"
+// snooze it until the period of the last of them ends.
 type SeenReason struct {
 	At     time.Time
 	Action store.Action
+	// Until is the end of the snooze; zero for good.
+	Until time.Time
 }
 
 // BookmarkReason is the pulse bookmark of a hidden repository.
@@ -87,7 +90,7 @@ type Card struct {
 func (c Card) Key() string { return c.Repo.Key() }
 
 // Hidden reports whether the page hides the card by default: the repository
-// is seen or held by a source such as the vault.
+// is bookmarked, snoozed, or held by a source such as the vault.
 func (c Card) Hidden() bool { return c.Seen != nil || len(c.Reasons) > 0 }
 
 // Shown returns the cards the page shows by default.
@@ -206,23 +209,7 @@ func (s *Service) fill(ctx context.Context, view *View, snapshots []trend.Snapsh
 		}
 	}
 
-	// Any mark makes its repository seen, since the first one; the
-	// interesting ones are its bookmark, with the comment of the last.
-	seen := map[string]*SeenReason{}
-	bookmarks := map[string]*BookmarkReason{}
-	for _, mark := range s.store.Marks() {
-		key := mark.Repo.Key()
-		if seen[key] == nil {
-			seen[key] = &SeenReason{At: mark.Time, Action: mark.Action}
-		}
-		if mark.Action != store.Interesting {
-			continue
-		}
-		if bookmarks[key] == nil {
-			bookmarks[key] = &BookmarkReason{At: mark.Time}
-		}
-		bookmarks[key].Comment = mark.Comment
-	}
+	marks := s.marks(view.Now)
 	items := make([]hide.Item, len(view.Cards))
 	for i, card := range view.Cards {
 		items[i] = hide.Item{Repo: card.Repo}
@@ -231,8 +218,48 @@ func (s *Service) fill(ctx context.Context, view *View, snapshots []trend.Snapsh
 	view.Sources = statuses
 	for i := range view.Cards {
 		card := &view.Cards[i]
-		card.Seen = seen[card.Key()]
-		card.Bookmark = bookmarks[card.Key()]
+		card.Seen = marks.seen[card.Key()]
+		card.Bookmark = marks.bookmarks[card.Key()]
 		card.Reasons = reasons[i]
 	}
+}
+
+// marked is what the marks say at a moment.
+type marked struct {
+	// seen holds the repositories the marks hide at that moment.
+	seen map[string]*SeenReason
+	// bookmarks holds the bookmarked repositories.
+	bookmarks map[string]*BookmarkReason
+}
+
+// marks reads the marks as they stand at now. "Interesting" bookmarks a
+// repository for good, with the comment of its last mark; "Skip" and "Mark
+// all shown as seen" snooze it for the period from the last of them, and a
+// snooze that ended hides nothing.
+func (s *Service) marks(now time.Time) marked {
+	m := marked{seen: map[string]*SeenReason{}, bookmarks: map[string]*BookmarkReason{}}
+	last := map[string]store.Mark{}
+	for _, mark := range s.store.Marks() {
+		key := mark.Repo.Key()
+		if mark.Action != store.Interesting {
+			if previous, found := last[key]; !found || !mark.Time.Before(previous.Time) {
+				last[key] = mark
+			}
+			continue
+		}
+		if m.bookmarks[key] == nil {
+			m.bookmarks[key] = &BookmarkReason{At: mark.Time}
+			m.seen[key] = &SeenReason{At: mark.Time, Action: mark.Action}
+		}
+		m.bookmarks[key].Comment = mark.Comment
+	}
+	for key, mark := range last {
+		if m.seen[key] != nil {
+			continue
+		}
+		if until := s.snooze.After(mark.Time, s.location); now.Before(until) {
+			m.seen[key] = &SeenReason{At: mark.Time, Action: mark.Action, Until: until}
+		}
+	}
+	return m
 }

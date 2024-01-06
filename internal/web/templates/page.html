@@ -120,7 +120,11 @@
 {{- define "reasons"}}
   <ul class="reasons">
     {{- with .Seen}}
+    {{- if .Until.IsZero}}
     <li class="reason" data-reason="seen">{{action .Action}} on <time datetime="{{stamp .At}}">{{full .At}}</time></li>
+    {{- else}}
+    <li class="reason" data-reason="seen">{{action .Action}} on <time datetime="{{stamp .At}}" title="{{full .At}}">{{date .At}}</time>, until <time datetime="{{stamp .Until}}">{{date .Until}}</time></li>
+    {{- end}}
     {{- end}}
     {{- with .Bookmark}}
     <li class="reason" data-reason="bookmark">Bookmarked in pulse{{if .Comment}}: <q>{{.Comment}}</q>{{else}}, without a comment{{end}}</li>

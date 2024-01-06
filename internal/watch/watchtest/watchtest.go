@@ -156,6 +156,13 @@ func (c *Clock) Now() time.Time {
 	return c.now
 }
 
+// Set moves the clock to the time.
+func (c *Clock) Set(now time.Time) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.now = now
+}
+
 // Advance moves the clock forward.
 func (c *Clock) Advance(d time.Duration) {
 	c.mu.Lock()

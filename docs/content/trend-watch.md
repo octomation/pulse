@@ -92,6 +92,20 @@ the list may include what is already in the vault, and it never says
 pulse reads the file when it starts: after you change it, restart the
 service.
 
+## Choose how long a skip lasts
+
+**Skip** and **Mark all shown as seen** hide a repository for three calendar
+months. To change that, set the period in the config file, as a whole number
+of `days`, `weeks`, `months` or `years`:
+
+```toml filename="~/.config/pulse/config.toml"
+[seen]
+snooze = "1 month"
+```
+
+The period applies to the marks you already have, too. **Interesting** is not
+affected: a bookmark hides its repository for good.
+
 ## Start it
 
 With Homebrew, the service runs in the background:
@@ -110,6 +124,7 @@ starts goes to its log, `$(brew --prefix)/var/log/pulse.log`:
 pulse listens on http://pulse.localhost:17842/
 data: /Users/you/.local/share/pulse
 vault: /Users/you/Notes/Bookmarks/GitHub (config /Users/you/.config/pulse/config.toml)
+seen: Skip and Mark all shown as seen hide a repository for 3 months
 github: the reader asks api.github.com without a token, about 30 repositories an hour
 ```
 
@@ -154,15 +169,20 @@ label per list with its position there: `trendshift daily #8`,
 
 | Action | What it does |
 | --- | --- |
-| **Interesting** | Bookmarks the repository, with the comment you typed in the field above it (optional, up to 500 characters), and marks it as seen |
-| **Skip** | Marks the repository as seen |
-| **Mark all shown as seen** | Marks every repository the page shows at that moment as seen |
+| **Interesting** | Bookmarks the repository, with the comment you typed in the field above it (optional, up to 500 characters), and hides it for good |
+| **Skip** | Marks the repository as seen and hides it for three months |
+| **Mark all shown as seen** | Marks every repository the page shows at that moment as seen, for three months |
 
-Only these three actions mark a repository as seen: opening the page, the
-reader, **Show hidden**, **Refresh** and an export mark nothing. A card
+Only these three actions mark a repository: opening the page, the reader,
+**Show hidden**, **Refresh** and an export mark nothing. A card
 leaves the page once its mark is written to disk; if it cannot be written,
-the card stays and shows the error. A seen mark has no expiry: a repository
-you saw a month ago stays hidden when it trends again.
+the card stays and shows the error.
+
+A seen mark is a snooze. When the three months are over and the repository
+trends again, it is back on the page and you decide anew; a new **Skip**
+hides it for another three months from then. A repository you bookmarked, in
+pulse or in your notes vault, stays hidden whatever its marks.
+[The config file](#choose-how-long-a-skip-lasts) sets another period.
 
 ### The reader
 
@@ -212,8 +232,8 @@ the reasons it is hidden:
 
 | Reason on the card | Meaning |
 | --- | --- |
-| `Skipped on Nov 19, 2026, 20:05` | You pressed **Skip** |
-| `Marked as seen on Nov 19, 2026, 20:05` | You pressed **Mark all shown as seen** |
+| `Skipped on Nov 19, 2026, until Feb 19, 2027` | You pressed **Skip**; the repository is hidden until that day |
+| `Marked as seen on Nov 19, 2026, until Feb 19, 2027` | You pressed **Mark all shown as seen** |
 | `Marked as interesting on Nov 19, 2026, 20:05` | You pressed **Interesting** |
 | `Bookmarked in pulse:` and the comment, or `Bookmarked in pulse, without a comment` | It has a pulse bookmark |
 | `In the vault: cobra.md` | The named note of your bookmarks directory names it |
@@ -295,7 +315,8 @@ when it is not there, and the bookmarks directory is only read.
   `pulse` in a terminal, or under a service manager of your own.
 - Opening the page loads a list at most once an hour, and a failed attempt
   counts: use **Refresh** to load sooner.
-- A seen mark cannot be taken back.
+- A seen mark cannot be taken back or extended; one period applies to every
+  repository.
 - A bookmark cannot be deleted from the page; only its comment can be
   replaced.
 - The six lists are fixed. A renamed or transferred repository is a new one.

@@ -14,6 +14,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"go.octolab.org/toolset/pulse/internal/config"
 	"go.octolab.org/toolset/pulse/internal/hide"
 	"go.octolab.org/toolset/pulse/internal/store"
 	"go.octolab.org/toolset/pulse/internal/vault"
@@ -42,6 +43,11 @@ type service struct {
 	github Details
 	// obsidian is the list of Obsidian vaults; empty skips the check.
 	obsidian string
+	// snooze is how long a skip hides; zero is the default.
+	snooze config.Period
+	// location is the time zone of the calendar the snooze is counted in;
+	// nil is UTC.
+	location *time.Location
 	// hide replaces the vault of the directory; nil keeps it.
 	hide hide.Facade
 	// home is the home directory the page writes as ~.
@@ -82,14 +88,22 @@ func (s *service) restart() {
 	}
 	handler, err := NewHandler(Options{
 		Service: watch.New(watch.Options{
-			Store: state, Loader: s.loader, Now: s.clock.Now, Hide: facade,
+			Store: state, Loader: s.loader, Now: s.clock.Now, Snooze: s.snooze, Hide: facade, Location: s.zone(),
 		}),
 		Details:  s.github,
-		Location: time.UTC,
+		Location: s.zone(),
 		Home:     s.home,
 	})
 	require.NoError(s.t, err)
 	s.store, s.handler = state, handler
+}
+
+// zone is the time zone of the calendar the snooze is counted in.
+func (s *service) zone() *time.Location {
+	if s.location == nil {
+		return time.UTC
+	}
+	return s.location
 }
 
 func (s *service) do(request *http.Request) *httptest.ResponseRecorder {

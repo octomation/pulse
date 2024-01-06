@@ -66,7 +66,7 @@ func TestYesterdaySeenTodayTwoNew(t *testing.T) {
 	assert.Equal(t, []string{"ghostty-org/ghostty", "zed-industries/zed"}, hidden.keys("shown"))
 	assert.Len(t, hidden.keys("hidden"), 8)
 	for _, key := range hidden.keys("hidden") {
-		assert.Equal(t, "Marked as seen on Nov 18, 2026, 08:15", hidden.card(t, key).reasons["seen"], key)
+		assert.Equal(t, "Marked as seen on Nov 18, 2026, until Feb 18, 2027", hidden.card(t, key).reasons["seen"], key)
 	}
 }
 
@@ -121,7 +121,7 @@ func TestVaultAndMonthOldSeenStayHidden(t *testing.T) {
 	assert.Equal(t, map[string]string{"vault": "In the vault: uv.md"}, byAlias.reasons)
 
 	seen := hidden.card(t, "tailscale/tailscale")
-	assert.Equal(t, map[string]string{"seen": "Skipped on Nov 18, 2026, 08:15"}, seen.reasons)
+	assert.Equal(t, map[string]string{"seen": "Skipped on Nov 18, 2026, until Feb 18, 2027"}, seen.reasons)
 }
 
 // The notes are read again for every page: a bookmark added to the vault hides
@@ -511,7 +511,7 @@ func TestInterestingCreatesBookmark(t *testing.T) {
 		assert.Equal(t, wantURLs, urls, "a skip is not a bookmark")
 
 		card := s.open("/?hidden=1").card(t, "ollama/ollama")
-		assert.Equal(t, map[string]string{"seen": "Skipped on Nov 18, 2026, 09:25"}, card.reasons)
+		assert.Equal(t, map[string]string{"seen": "Skipped on Nov 18, 2026, until Feb 18, 2027"}, card.reasons)
 		assert.Contains(t, card.html, `data-action="interesting"`)
 		assert.NotContains(t, card.html, `data-action="skip"`)
 

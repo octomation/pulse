@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -131,21 +132,64 @@ func TestLoad(t *testing.T) {
 		assert.Error(t, err)
 	})
 
-	t.Run("the default provider of the vault is the directory", func(t *testing.T) {
+	t.Run("the defaults: the dir provider and a quarter of snooze", func(t *testing.T) {
 		file, err := Load(write(t, "[vault]\nbookmarks = \"~/notes\"\n"), home)
 		require.NoError(t, err)
 		assert.Equal(t, "dir", file.Vault.Provider)
+		assert.Equal(t, Period{Months: 3}, file.Seen.Period)
 
 		missing, err := Load(filepath.Join(t.TempDir(), "config.toml"), home)
 		require.NoError(t, err)
 		assert.Equal(t, "dir", missing.Vault.Provider)
+		assert.Equal(t, DefaultSnooze, missing.Seen.Period)
 	})
 
-	t.Run("a provider of the vault", func(t *testing.T) {
-		file, err := Load(write(t, "[vault]\nprovider = \"indexit\"\n"), home)
+	t.Run("a period of snooze and a provider of the vault", func(t *testing.T) {
+		file, err := Load(write(t, "[vault]\nprovider = \"indexit\"\n[seen]\nsnooze = \"1 month\"\n"), home)
 		require.NoError(t, err)
 		assert.Equal(t, "indexit", file.Vault.Provider)
+		assert.Equal(t, Period{Months: 1}, file.Seen.Period)
 	})
+
+	t.Run("a snooze that is not a period is an error", func(t *testing.T) {
+		_, err := Load(write(t, "[seen]\nsnooze = \"a while\"\n"), home)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "seen.snooze")
+	})
+}
+
+func TestPeriod(t *testing.T) {
+	start := time.Date(2026, time.November, 20, 8, 15, 0, 0, time.UTC)
+	for text, want := range map[string]Period{
+		"3 months": {Months: 3}, "1 month": {Months: 1}, "1 Month": {Months: 1},
+		"90 days": {Days: 90}, "1 day": {Days: 1}, "2 weeks": {Days: 14}, "1 year": {Months: 12},
+	} {
+		got, err := ParsePeriod(text)
+		require.NoError(t, err, text)
+		assert.Equal(t, want, got, text)
+	}
+	for _, text := range []string{"", "3", "months", "0 months", "-1 month", "1.5 months", "3 fortnights", "3 months ago"} {
+		_, err := ParsePeriod(text)
+		assert.Error(t, err, text)
+	}
+
+	assert.Equal(t, time.Date(2027, time.February, 20, 8, 15, 0, 0, time.UTC), DefaultSnooze.After(start, time.UTC))
+	// A month without the day ends on its last day.
+	assert.Equal(t, time.Date(2027, time.February, 28, 9, 0, 0, 0, time.UTC),
+		DefaultSnooze.After(time.Date(2026, time.November, 30, 9, 0, 0, 0, time.UTC), time.UTC))
+	assert.Equal(t, time.Date(2028, time.February, 29, 9, 0, 0, 0, time.UTC),
+		Period{Months: 1}.After(time.Date(2028, time.January, 31, 9, 0, 0, 0, time.UTC), time.UTC))
+	// The calendar of the zone: 00:30 on December 1 in UTC+3 is November 30
+	// in UTC, and three months from it are March 1, 00:30, in UTC+3.
+	moscow := time.FixedZone("UTC+3", 3*60*60)
+	skip := time.Date(2026, time.November, 30, 21, 30, 0, 0, time.UTC)
+	assert.Equal(t, time.Date(2027, time.March, 1, 0, 30, 0, 0, moscow).Unix(), DefaultSnooze.After(skip, moscow).Unix())
+	assert.Equal(t, time.Date(2026, time.December, 15, 0, 30, 0, 0, moscow).Unix(), Period{Days: 14}.After(skip, moscow).Unix())
+	assert.Equal(t, "3 months", DefaultSnooze.String())
+	assert.Equal(t, "1 month", Period{Months: 1}.String())
+	assert.Equal(t, "2 weeks", Period{Days: 14}.String())
+	assert.Equal(t, "1 year", Period{Months: 12}.String())
+	assert.Equal(t, "10 days", Period{Days: 10}.String())
 }
 
 func TestCheckLoopback(t *testing.T) {

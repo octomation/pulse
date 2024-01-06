@@ -83,8 +83,9 @@ func NewServer() *cobra.Command {
 			"\n" +
 			"Opening the page loads a list from the network when its last attempt is more\n" +
 			"than an hour old; \"Refresh\" loads all six now. \"Interesting\" bookmarks a\n" +
-			"repository, with an optional comment, \"Skip\" and \"Mark all shown as seen\" hide\n" +
-			"what you have looked at, and `pulsectl bookmarks` prints the bookmarks.\n" +
+			"repository, with an optional comment, for good; \"Skip\" and \"Mark all shown as\n" +
+			"seen\" hide what you have looked at for three months, and `pulsectl bookmarks`\n" +
+			"prints the bookmarks.\n" +
 			"\n" +
 			"A click on a repository opens it in the reader of the same page, with the\n" +
 			"facts and the README of GitHub. pulse asks api.github.com for them when a\n" +
@@ -105,6 +106,11 @@ func NewServer() *cobra.Command {
 			"\n" +
 			"  [vault]\n" +
 			"  bookmarks = \"~/path/to/Bookmarks/GitHub\"\n" +
+			"\n" +
+			"how long a skipped repository stays hidden, three months by default:\n" +
+			"\n" +
+			"  [seen]\n" +
+			"  snooze = \"3 months\"\n" +
 			"\n" +
 			"and the GitHub token of the reader, which a background service cannot take\n" +
 			"from your shell:\n" +
@@ -163,7 +169,9 @@ func NewServer() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			service := watch.New(watch.Options{Store: state, Loader: newLoader(), Hide: hide.Facade{provider}})
+			service := watch.New(watch.Options{
+				Store: state, Loader: newLoader(), Hide: hide.Facade{provider}, Snooze: file.Seen.Period,
+			})
 			secret, origin := token(os.Getenv, file)
 			handler, err := web.NewHandler(web.Options{Service: service, Context: ctx, Details: newDetails(secret), Home: home})
 			if err != nil {
@@ -191,6 +199,7 @@ func NewServer() *cobra.Command {
 			default:
 				_, _ = fmt.Fprintf(out, "vault: not configured (no config at %s)\n", file.Path)
 			}
+			_, _ = fmt.Fprintf(out, "seen: Skip and Mark all shown as seen hide a repository for %s\n", file.Seen.Period)
 			if origin != "" {
 				_, _ = fmt.Fprintf(out, "github: the reader asks api.github.com with the token of %s\n", origin)
 			} else {

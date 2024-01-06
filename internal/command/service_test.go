@@ -165,6 +165,7 @@ func TestBookmarksThroughTheCommands(t *testing.T) {
 
 	service := serve(t, args...)
 	assert.Equal(t, "pulse listens on "+service.addr+"/\ndata: "+data+"\nvault: "+vault+" (config "+config+")\n"+
+		"seen: Skip and Mark all shown as seen hide a repository for 3 months\n"+
 		"github: the reader asks api.github.com without a token, about 30 repositories an hour\n",
 		service.stdout.String())
 
@@ -255,8 +256,9 @@ func TestServerWithoutConfig(t *testing.T) {
 	// The defaults of the environment: no flag names the files.
 	service := serve(t, "--listen", "127.0.0.1:0", "--listen", "127.0.0.1:0")
 	lines := strings.Split(strings.TrimSpace(service.stdout.String()), "\n")
-	require.Len(t, lines, 5, service.stdout.String())
-	assert.Equal(t, "github: the reader asks api.github.com without a token, about 30 repositories an hour", lines[4])
+	require.Len(t, lines, 6, service.stdout.String())
+	assert.Equal(t, "seen: Skip and Mark all shown as seen hide a repository for 3 months", lines[4])
+	assert.Equal(t, "github: the reader asks api.github.com without a token, about 30 repositories an hour", lines[5])
 	assert.Regexp(t, `^pulse listens on http://pulse\.localhost:\d+/$`, lines[0])
 	assert.Regexp(t, `^pulse listens on http://pulse\.localhost:\d+/$`, lines[1])
 	assert.NotEqual(t, lines[0], lines[1])
