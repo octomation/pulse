@@ -20,8 +20,8 @@ state: OPEN
 stateReason: null
 duplicateOf: null
 createdAt: 2026-11-20T09:31:16Z
-updatedAt: 2026-11-20T10:28:02Z
-lastEditedAt: 2026-11-20T10:28:02Z
+updatedAt: 2026-11-22T16:27:00Z
+lastEditedAt: 2026-11-22T16:26:59Z
 closedAt: null
 ---
 
@@ -40,6 +40,8 @@ what I have not seen yet, with "Show hidden" working there as it does today.
 ```bash
 $ open http://pulse.localhost:17842/                   # today, as now
 $ open http://pulse.localhost:17842/days/2026-11-19/    # the page as the lists stood on that day
+$ open http://pulse.localhost:17842/days/2026-11-19/hidden/   # the same day with the hidden ones
+$ open http://pulse.localhost:17842/hidden/             # today with the hidden ones
 ```
 
 The masthead names the day and has a calendar: the days with snapshots can be
@@ -50,6 +52,10 @@ snapshots.
 
 - A day has its own path, `/days/YYYY-MM-DD/`, not a query parameter; the
   root `/` is today. The path of today's date shows the same page as `/`.
+- "Show hidden" is a path too: `/hidden/` for today and
+  `/days/YYYY-MM-DD/hidden/` for a day; the switch moves between the two
+  paths of the same day. The old `/?hidden=1` is gone: the query parameter
+  is ignored and `/` shows today. No page of pulse takes a query parameter.
 - A day is a calendar day in the local time of the Mac. Snapshots are stored
   in UTC and are put into days by local time.
 - The view of a past day is built like today's, from the last successful
@@ -79,6 +85,9 @@ snapshots.
 
 ## Acceptance criteria
 
+- [ ] Test: `/hidden/` and `/days/YYYY-MM-DD/hidden/` show the hidden cards
+  of their day with the reasons; `/?hidden=1` shows today without the hidden
+  ones.
 - [ ] Test on fixtures: snapshots of three days, one of them without one of
   the lists; each day shows exactly its own last snapshots, and the missing
   list is named for that day.
