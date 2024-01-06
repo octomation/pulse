@@ -13,14 +13,14 @@ labels:
   - "effort: hard"
 assignees:
   - kamilsk
-milestone: null
+milestone: "[[PUL-M1]]"
 parent: null
 issueFields: {}
 state: CLOSED
 stateReason: COMPLETED
 duplicateOf: null
 createdAt: 2026-11-20T04:31:06Z
-updatedAt: 2026-11-20T07:43:24Z
+updatedAt: 2026-11-23T09:58:03Z
 lastEditedAt: 2026-11-20T07:12:53Z
 closedAt: 2026-11-20T07:43:24Z
 ---

@@ -13,15 +13,15 @@ labels:
   - "effort: medium"
 assignees:
   - kamilsk
-milestone: "[[PUL-M1]]"
+milestone: "[[PUL-M2]]"
 parent: null
 issueFields: {}
 state: OPEN
 stateReason: null
 duplicateOf: null
 createdAt: 2026-11-20T10:22:46Z
-updatedAt: 2026-11-20T10:28:08Z
-lastEditedAt: 2026-11-20T10:28:08Z
+updatedAt: 2026-11-23T09:57:55Z
+lastEditedAt: 2026-11-23T09:35:52Z
 closedAt: null
 ---
 
@@ -91,17 +91,17 @@ $ open http://pulse.localhost:17842/days/2026-11-19/flow/   # the cards of that 
 
 ## Acceptance criteria
 
-- [ ] Test: the flow holds exactly the cards the page shows by default, in
+- [x] Test: the flow holds exactly the cards the page shows by default, in
   the order of the page.
-- [ ] Test: left marks the repository as skipped, right marks it as
+- [x] Test: left marks the repository as skipped, right marks it as
   interesting with the comment, down marks nothing and shows the next card;
   a new flow holds the card again.
-- [ ] Test: a failed write keeps the card and shows the error.
-- [ ] Test: the last answer shows the end of the flow with a link to the
+- [x] Test: a failed write keeps the card and shows the error.
+- [x] Test: the last answer shows the end of the flow with a link to the
   page.
-- [ ] The answers stay in the same place on the screen for cards with a
+- [x] The answers stay in the same place on the screen for cards with a
   short and a long description, checked in a browser.
-- [ ] The guide in `docs/content/` describes flow mode and its keys.
+- [x] The guide in `docs/content/` describes flow mode and its keys.
 
 ## Out of scope
 

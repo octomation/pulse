@@ -13,15 +13,15 @@ labels:
   - "effort: medium"
 assignees:
   - kamilsk
-milestone: "[[PUL-M1]]"
+milestone: "[[PUL-M2]]"
 parent: null
 issueFields: {}
 state: OPEN
 stateReason: null
 duplicateOf: null
 createdAt: 2026-11-20T09:31:20Z
-updatedAt: 2026-11-20T10:05:18Z
-lastEditedAt: 2026-11-20T09:31:35Z
+updatedAt: 2026-11-23T09:58:08Z
+lastEditedAt: 2026-11-23T09:35:57Z
 closedAt: null
 ---
 
@@ -87,19 +87,19 @@ type Provider interface {
 
 ## Acceptance criteria
 
-- [ ] The tests of the vault filter from [[PUL-5]] pass through the
+- [x] The tests of the vault filter from [[PUL-5]] pass through the
   facade unchanged.
-- [ ] Test: a provider that fails leaves its repositories shown, and the page
+- [x] Test: a provider that fails leaves its repositories shown, and the page
   names the source and the error.
-- [ ] Test: the page shows the origin path, the count and the newest note of
+- [x] Test: the page shows the origin path, the count and the newest note of
   the vault.
-- [ ] Test: a configured directory outside every vault Obsidian knows gives
+- [x] Test: a configured directory outside every vault Obsidian knows gives
   the warning; one inside a known vault does not.
-- [ ] Test: a fake provider swapped in through the configuration hides its
+- [x] Test: a fake provider swapped in through the configuration hides its
   repositories with its own reasons, with no change to the page code.
-- [ ] Live check on this Mac: with the path fixed, the 21 repositories of the
+- [x] Live check on this Mac: with the path fixed, the 21 repositories of the
   restored notes are hidden with "In the vault".
-- [ ] The guide in `docs/content/` describes the vault line and the warning.
+- [x] The guide in `docs/content/` describes the vault line and the warning.
 
 ## Out of scope
 

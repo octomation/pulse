@@ -13,15 +13,15 @@ labels:
   - "effort: easy"
 assignees:
   - kamilsk
-milestone: "[[PUL-M1]]"
+milestone: "[[PUL-M2]]"
 parent: null
 issueFields: {}
 state: OPEN
 stateReason: null
 duplicateOf: null
 createdAt: 2026-11-20T10:04:29Z
-updatedAt: 2026-11-22T16:31:15Z
-lastEditedAt: 2026-11-22T16:31:15Z
+updatedAt: 2026-11-23T09:58:11Z
+lastEditedAt: 2026-11-23T09:36:00Z
 closedAt: null
 ---
 
@@ -75,17 +75,17 @@ $ open http://pulse.localhost:17842/        # 2027-02-21: owner/name trends agai
 
 ## Acceptance criteria
 
-- [ ] Test: a repository skipped three months less a day ago is hidden; one skipped three
+- [x] Test: a repository skipped three months less a day ago is hidden; one skipped three
   months and a day ago is shown again when a list has it.
-- [ ] Test: "Mark all shown as seen" expires the same way as "Skip".
-- [ ] Test: a repository marked "Interesting" a year ago stays hidden.
-- [ ] Test: a repository in the vault with an expired skip stays hidden, with
+- [x] Test: "Mark all shown as seen" expires the same way as "Skip".
+- [x] Test: a repository marked "Interesting" a year ago stays hidden.
+- [x] Test: a repository in the vault with an expired skip stays hidden, with
   the vault as the reason.
-- [ ] Test: a repository skipped again after its snooze expired is hidden for
+- [x] Test: a repository skipped again after its snooze expired is hidden for
   a new period from the second mark.
-- [ ] Test: a configured period of one month replaces the default.
-- [ ] The hidden view names the end of the snooze.
-- [ ] The guide in `docs/content/` describes the snooze and its period.
+- [x] Test: a configured period of one month replaces the default.
+- [x] The hidden view names the end of the snooze.
+- [x] The guide in `docs/content/` describes the snooze and its period.
 
 ## Out of scope
 

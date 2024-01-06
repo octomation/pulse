@@ -13,15 +13,15 @@ labels:
   - "effort: medium"
 assignees:
   - kamilsk
-milestone: "[[PUL-M1]]"
+milestone: "[[PUL-M2]]"
 parent: null
 issueFields: {}
 state: OPEN
 stateReason: null
 duplicateOf: null
 createdAt: 2026-11-20T09:31:16Z
-updatedAt: 2026-11-22T16:31:12Z
-lastEditedAt: 2026-11-22T16:31:12Z
+updatedAt: 2026-11-23T09:58:06Z
+lastEditedAt: 2026-11-23T09:35:55Z
 closedAt: null
 ---
 
@@ -85,25 +85,25 @@ snapshots.
 
 ## Acceptance criteria
 
-- [ ] Test: `/hidden/` and `/days/YYYY-MM-DD/hidden/` show the hidden cards
+- [x] Test: `/hidden/` and `/days/YYYY-MM-DD/hidden/` show the hidden cards
   of their day with the reasons; `/?hidden=1` shows today without the hidden
   ones.
-- [ ] Test on fixtures: snapshots of three days, one of them without one of
+- [x] Test on fixtures: snapshots of three days, one of them without one of
   the lists; each day shows exactly its own last snapshots, and the missing
   list is named for that day.
-- [ ] Test: snapshots taken at 23:30 and 00:30 local time go to two different
+- [x] Test: snapshots taken at 23:30 and 00:30 local time go to two different
   days, whatever the UTC date of the file.
-- [ ] Test: a repository marked seen today is hidden on yesterday's page and
+- [x] Test: a repository marked seen today is hidden on yesterday's page and
   shown with its reason under "Show hidden".
-- [ ] Test: after "Mark all shown as seen" on a day, opening that day again a
+- [x] Test: after "Mark all shown as seen" on a day, opening that day again a
   month later shows nothing new.
-- [ ] Test: "Mark all shown as seen" on a past day marks exactly what that
+- [x] Test: "Mark all shown as seen" on a past day marks exactly what that
   page showed, and its marks name the lists of that day.
-- [ ] Test: opening a past day makes no request to the sources.
-- [ ] The calendar offers exactly the days that have snapshots, as links to
+- [x] Test: opening a past day makes no request to the sources.
+- [x] The calendar offers exactly the days that have snapshots, as links to
   `/days/YYYY-MM-DD/`; a malformed date or a day without snapshots answers
   404 with a link to today.
-- [ ] The guide in `docs/content/` describes the calendar with an example.
+- [x] The guide in `docs/content/` describes the calendar with an example.
 
 ## Out of scope
 

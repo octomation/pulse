@@ -13,7 +13,7 @@ shortDescription: "OctoLab Platform development."
 public: true
 closed: false
 createdAt: 2022-05-07T06:25:58Z
-updatedAt: 2026-11-21T06:33:13Z
+updatedAt: 2026-11-23T09:39:14Z
 closedAt: null
 ---
 
@@ -115,10 +115,9 @@ closedAt: null
 - [ ] octomation/go-module#394 — dev: support agents.md
 - [ ] octomation/go-module#395 — dev: support new schedule for dependabot
 - [ ] [[PUL-8]] — core: indexit as the vault provider
-- [ ] [[PUL-9]] — core: a seen mark snoozes for a quarter
-- [ ] [[PUL-10]] — web: flow mode, one card at a time
 - [ ] octomation/maintainer#25 — add possibility to compare configuration of repos
 - [ ] octomation/maintainer#466 — fetch: remotes: configure upstream for forks and check remote consistency
+- [ ] [[PUL-12]] — ci: run the browser check
 
 ## To do
 
@@ -127,8 +126,6 @@ closedAt: null
 - [ ] octomation/maintainer#44 — github: contribution: refactor command and view
 - [ ] octomation/maintainer#45 — github: contribution: extend support lookup for a month
 - [ ] octomation/maintainer#48 — ci/cd: tools: test act for local development
-- [ ] [[PUL-6]] — web: calendar of past snapshots
-- [ ] [[PUL-7]] — core: hide through a facade, the vault as its first provider
 
 ## In progress
 
@@ -137,6 +134,11 @@ closedAt: null
 - [ ] octomation/maintainer#50 — command: separate command structure and command execution
 - [ ] octomation/maintainer#51 — di: define service provider to inject it into command for lazy service initialization
 - [ ] octomation/maintainer#522 — github: contribution: lose no contribution at the edges of the monthly slices
+- [ ] [[PUL-6]] — web: calendar of past snapshots
+- [ ] [[PUL-7]] — core: hide through a facade, the vault as its first provider
+- [ ] [[PUL-9]] — core: a seen mark snoozes for a quarter
+- [ ] [[PUL-10]] — web: flow mode, one card at a time
+- [ ] [[PUL-11]] — web: a front page grid without holes
 
 ## Done
 
