@@ -131,6 +131,15 @@ make release-config-check
 `make release-config-check` accepts exactly the GoReleaser `brews`
 deprecation and nothing else: `brews` ships both binaries as one Formula.
 
+Until a workflow runs it ([PUL-12](.github/issues/PUL-12.md)), check the
+page and flow mode in headless Chrome too. playwright-core is not a
+dependency: `PLAYWRIGHT_CORE` names an installed copy, whose browser must
+match its version.
+
+```sh
+PLAYWRIGHT_CORE=/path/to/playwright-core/index.js make test-browser
+```
+
 ### 1. Changelog
 
 The note covers everything that changed since the last stable release, not
