@@ -124,12 +124,12 @@ func TestMarks(t *testing.T) {
 			Lists: []string{"trendshift/daily", "github/daily"},
 		}}, f.store.Marks())
 
-		card, found := f.service.View().Card("owner/name")
+		card, found := f.service.View(t.Context()).Card("owner/name")
 		require.True(t, found)
 		assert.True(t, card.Hidden())
 		assert.Equal(t, &SeenReason{At: morning, Action: store.Interesting}, card.Seen)
 		assert.Equal(t, &BookmarkReason{At: morning, Comment: "why"}, card.Bookmark)
-		assert.Nil(t, card.Vault)
+		assert.Empty(t, card.Reasons)
 	})
 
 	t.Run("a skip keeps no comment", func(t *testing.T) {
@@ -395,7 +395,7 @@ func TestLoads(t *testing.T) {
 		assert.Equal(t, 6, f.loader.Total(), "nothing is loaded again within the hour")
 		assert.Contains(t, view.Problem, "could not be recorded")
 		assert.Equal(t, 1, view.FailedLists())
-		assert.Contains(t, f.service.View().Problem, "could not be recorded")
+		assert.Contains(t, f.service.View(t.Context()).Problem, "could not be recorded")
 
 		problem, err := f.service.Refresh(t.Context())
 		require.NoError(t, err)

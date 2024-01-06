@@ -54,6 +54,9 @@ type Options struct {
 	Details Details
 	// Location is the time zone of the times on the page; nil is local.
 	Location *time.Location
+	// Home is the home directory, which the page writes as ~; empty writes
+	// paths in full.
+	Home string
 }
 
 // Details is what the reader asks GitHub through.
@@ -197,7 +200,7 @@ func (h *handler) story(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s := story{card: card{Card: watch.Card{Repo: repo}, State: "shown"}}
-	if c, found := h.Service.View().Card(repo.Key()); found {
+	if c, found := h.Service.View(r.Context()).Card(repo.Key()); found {
 		// GitHub is asked for the name as the lists write it.
 		s.card, s.Known, repo = newCard(c), true, c.Repo
 	}
@@ -299,7 +302,7 @@ func (h *handler) mark(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	view := h.Service.View()
+	view := h.Service.View(r.Context())
 	answer := h.countsOf(view)
 	if card, found := view.Card(repo.Key()); found {
 		answer.Card = h.fragment("card", newCard(card))
@@ -333,7 +336,7 @@ func (h *handler) seen(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "the marks could not be written: "+err.Error())
 		return
 	}
-	answer := h.countsOf(h.Service.View())
+	answer := h.countsOf(h.Service.View(r.Context()))
 	answer.Marked = &marked
 	writeJSON(w, http.StatusOK, answer)
 }
@@ -350,7 +353,7 @@ func (h *handler) refresh(w http.ResponseWriter, r *http.Request) {
 	}
 	// The lists are loaded even when their outcome could not be recorded:
 	// the page that follows shows them, and the problem with them.
-	view := h.Service.View()
+	view := h.Service.View(r.Context())
 	answer := h.countsOf(view)
 	failed, loaded := view.FailedLists(), view.LoadedLists()
 	answer.Failed, answer.Loaded, answer.Problem = &failed, &loaded, problem

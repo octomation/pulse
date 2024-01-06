@@ -13,8 +13,10 @@ import (
 
 	"go.octolab.org/toolset/pulse/internal/config"
 	"go.octolab.org/toolset/pulse/internal/details"
+	"go.octolab.org/toolset/pulse/internal/hide"
 	"go.octolab.org/toolset/pulse/internal/source"
 	"go.octolab.org/toolset/pulse/internal/store"
+	"go.octolab.org/toolset/pulse/internal/vault"
 	"go.octolab.org/toolset/pulse/internal/watch"
 	"go.octolab.org/toolset/pulse/internal/web"
 )
@@ -32,6 +34,22 @@ var newLoader = func() watch.Loader { return source.NewLoader(source.Sites()) }
 // The tests replace
 // it, so they never use the network.
 var newDetails = func(token string) web.Details { return details.New(details.Options{Token: token}) }
+
+// vaultProviders are what may answer for the vault, by the name the
+// configuration gives in [vault] provider. The tests add their own.
+var vaultProviders = map[string]func(vault.Settings) (hide.Provider, error){
+	config.DefaultProvider: vault.NewDir,
+}
+
+// vaultProvider returns what answers for the vault as the configuration
+// says.
+func vaultProvider(file config.File, home string) (hide.Provider, error) {
+	factory, found := vaultProviders[file.Vault.Provider]
+	if !found {
+		return nil, fmt.Errorf("config %s: vault.provider %q is not known: want %q", file.Path, file.Vault.Provider, config.DefaultProvider)
+	}
+	return factory(vault.Settings{Bookmarks: file.Vault.Bookmarks, Obsidian: vault.ObsidianConfig(home, os.Getenv)})
+}
 
 // token returns the GitHub token and where it comes from: a variable of the
 // environment first, as a shell has it, then the configuration, which is all
@@ -121,6 +139,10 @@ func NewServer() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			provider, err := vaultProvider(file, home)
+			if err != nil {
+				return err
+			}
 			dir, err := config.DataDir(dataDir, os.Getenv, home)
 			if err != nil {
 				return fmt.Errorf("data directory: %w", err)
@@ -141,9 +163,9 @@ func NewServer() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			service := watch.New(watch.Options{Store: state, Loader: newLoader(), Vault: file.Vault.Bookmarks})
+			service := watch.New(watch.Options{Store: state, Loader: newLoader(), Hide: hide.Facade{provider}})
 			secret, origin := token(os.Getenv, file)
-			handler, err := web.NewHandler(web.Options{Service: service, Context: ctx, Details: newDetails(secret)})
+			handler, err := web.NewHandler(web.Options{Service: service, Context: ctx, Details: newDetails(secret), Home: home})
 			if err != nil {
 				for _, listener := range listeners {
 					_ = listener.Close()
@@ -160,6 +182,8 @@ func NewServer() *cobra.Command {
 			}
 			_, _ = fmt.Fprintf(out, "data: %s\n", dir)
 			switch {
+			case file.Vault.Provider != config.DefaultProvider:
+				_, _ = fmt.Fprintf(out, "vault: through %s (config %s)\n", file.Vault.Provider, file.Path)
 			case file.Vault.Bookmarks != "":
 				_, _ = fmt.Fprintf(out, "vault: %s (config %s)\n", file.Vault.Bookmarks, file.Path)
 			case file.Found:

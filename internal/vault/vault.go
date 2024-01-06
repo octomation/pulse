@@ -13,6 +13,7 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"time"
 
 	"go.yaml.in/yaml/v3"
 
@@ -35,6 +36,11 @@ type Index struct {
 	Notes int
 	// Broken names the notes whose frontmatter could not be read.
 	Broken []string
+	// Modified maps the file name of a note to the time it was last
+	// changed.
+	Modified map[string]time.Time
+	// Newest is the time of the note changed last.
+	Newest time.Time
 }
 
 // Note returns the note that names the repository.
@@ -50,7 +56,7 @@ func (i Index) Note(repo trend.Repo) (string, bool) {
 // read is an error, and so is one without a single repository:
 // ErrNoRepositories, returned with the index.
 func Read(dir string) (Index, error) {
-	index := Index{Repos: map[string]string{}}
+	index := Index{Repos: map[string]string{}, Modified: map[string]time.Time{}}
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		return index, err
@@ -61,6 +67,12 @@ func Read(dir string) (Index, error) {
 			continue
 		}
 		names = append(names, entry.Name())
+		if info, err := entry.Info(); err == nil {
+			index.Modified[entry.Name()] = info.ModTime()
+			if info.ModTime().After(index.Newest) {
+				index.Newest = info.ModTime()
+			}
+		}
 	}
 	index.Notes = len(names)
 

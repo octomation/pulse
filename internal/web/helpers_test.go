@@ -14,7 +14,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"go.octolab.org/toolset/pulse/internal/hide"
 	"go.octolab.org/toolset/pulse/internal/store"
+	"go.octolab.org/toolset/pulse/internal/vault"
 	"go.octolab.org/toolset/pulse/internal/watch"
 	"go.octolab.org/toolset/pulse/internal/watch/watchtest"
 	. "go.octolab.org/toolset/pulse/internal/web"
@@ -38,15 +40,31 @@ type service struct {
 	handler http.Handler
 	// github answers the reader; nil starts the service without it.
 	github Details
+	// obsidian is the list of Obsidian vaults; empty skips the check.
+	obsidian string
+	// hide replaces the vault of the directory; nil keeps it.
+	hide hide.Facade
+	// home is the home directory the page writes as ~.
+	home string
 }
 
 // start runs the service on an empty data directory. The vault directory
 // may be empty: the filter is off then.
 func start(t *testing.T, vault string) *service {
 	t.Helper()
+	return startWith(t, vault, nil)
+}
+
+// startWith runs the service as start does, after configure has set what
+// the test needs.
+func startWith(t *testing.T, vault string, configure func(*service)) *service {
+	t.Helper()
 	s := &service{
 		t: t, dir: filepath.Join(t.TempDir(), "data"), vault: vault,
 		loader: watchtest.NewLoader(), clock: watchtest.NewClock(morning),
+	}
+	if configure != nil {
+		configure(s)
 	}
 	s.restart()
 	return s
@@ -58,12 +76,17 @@ func (s *service) restart() {
 	s.t.Helper()
 	state, err := store.Open(s.dir)
 	require.NoError(s.t, err)
+	facade := s.hide
+	if facade == nil {
+		facade = hide.Facade{vault.Dir{Settings: vault.Settings{Bookmarks: s.vault, Obsidian: s.obsidian}}}
+	}
 	handler, err := NewHandler(Options{
 		Service: watch.New(watch.Options{
-			Store: state, Loader: s.loader, Vault: s.vault, Now: s.clock.Now,
+			Store: state, Loader: s.loader, Now: s.clock.Now, Hide: facade,
 		}),
 		Details:  s.github,
 		Location: time.UTC,
+		Home:     s.home,
 	})
 	require.NoError(s.t, err)
 	s.store, s.handler = state, handler

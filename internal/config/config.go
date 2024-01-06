@@ -78,10 +78,16 @@ func Expand(path, home string) string {
 
 // Vault is the [vault] table of the configuration.
 type Vault struct {
+	// Provider names what answers for the vault: "dir", the reader of the
+	// bookmarks directory inside pulse, by default.
+	Provider string `toml:"provider"`
 	// Bookmarks is the directory of the vault bookmark notes; pulse only
 	// reads it. Empty turns the vault filter off.
 	Bookmarks string `toml:"bookmarks"`
 }
+
+// DefaultProvider answers for the vault when the configuration names none.
+const DefaultProvider = "dir"
 
 // GitHub is the [github] table of the configuration.
 type GitHub struct {
@@ -107,6 +113,7 @@ type File struct {
 // relative one is resolved against the directory of the file.
 func Load(path, home string) (File, error) {
 	file := File{Path: path}
+	file.Vault.Provider = DefaultProvider
 	raw, err := os.ReadFile(path)
 	if errors.Is(err, fs.ErrNotExist) {
 		return file, nil
@@ -119,6 +126,9 @@ func Load(path, home string) (File, error) {
 		return file, fmt.Errorf("config %s: %s", path, explain(err))
 	}
 	file.GitHub.Token = strings.TrimSpace(file.GitHub.Token)
+	if file.Vault.Provider = strings.TrimSpace(file.Vault.Provider); file.Vault.Provider == "" {
+		file.Vault.Provider = DefaultProvider
+	}
 	if dir := strings.TrimSpace(file.Vault.Bookmarks); dir != "" {
 		dir = Expand(dir, home)
 		if !filepath.IsAbs(dir) {

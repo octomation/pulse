@@ -43,14 +43,19 @@
       </li>
       {{- end}}
     </ul>
-    {{- with .Vault}}
-    {{- if not .Configured}}
-    <p class="vault is-off" data-vault="off">The vault filter is off: the configuration names no bookmarks directory.</p>
-    {{- else if .Error}}
-    <p class="vault is-failed" data-vault="error">The bookmarks of the vault could not be read: {{.Error}}. The list may include what is already in the vault.</p>
+    {{- range .Sources}}
+    {{- if eq .State "off"}}
+    <p class="vault is-off" data-source="{{.Source}}" data-vault="off">The {{.Source}} filter is off{{if eq .Source "vault"}}: the configuration names no bookmarks directory{{end}}.</p>
+    {{- else if eq .State "failed"}}
+    <p class="vault is-failed" data-source="{{.Source}}" data-vault="error">The {{.Source}} could not be read{{if .Origin}} from <span class="origin">{{home .Origin}}</span>{{end}}: {{.Error}}. The list may include what is already in the {{.Source}}.</p>
     {{- else}}
-    <p class="vault" data-vault="ok">Vault: {{plural .Repos "repository" "repositories"}} in {{plural .Notes "note" "notes"}}
+    <p class="vault" data-source="{{.Source}}" data-vault="ok">{{capital .Source}}: {{plural .Entries "repository" "repositories"}}{{if .Documents}} in {{plural .Documents "note" "notes"}}{{end}}
+      {{- if .Origin}} <i>·</i> <span class="origin" data-origin>{{home .Origin}}</span>{{end}}
+      {{- if not .Newest.IsZero}} <i>·</i> <span data-newest>newest {{if .Documents}}note{{else}}entry{{end}} <time datetime="{{stamp .Newest}}">{{full .Newest}}</time></span>{{end}}
       {{- if .Broken}}; <span class="vault-broken" title="{{names .Broken}}">{{plural (len .Broken) "note" "notes"}} could not be read</span>{{end}}.</p>
+    {{- end}}
+    {{- if .Warning}}
+    <p class="vault is-warning" data-source="{{.Source}}" data-warning>{{capital .Source}}: {{.Warning}}.</p>
     {{- end}}
     {{- end}}
     {{- if .Problem}}
@@ -120,8 +125,8 @@
     {{- with .Bookmark}}
     <li class="reason" data-reason="bookmark">Bookmarked in pulse{{if .Comment}}: <q>{{.Comment}}</q>{{else}}, without a comment{{end}}</li>
     {{- end}}
-    {{- with .Vault}}
-    <li class="reason" data-reason="vault">In the vault: {{.Note}}</li>
+    {{- range .Reasons}}
+    <li class="reason" data-reason="{{.Source}}">{{.Label}}{{if .Ref}}: {{.Ref}}{{end}}</li>
     {{- end}}
   </ul>
 {{- end}}

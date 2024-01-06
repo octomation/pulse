@@ -130,6 +130,22 @@ func TestLoad(t *testing.T) {
 		_, err := Load(write(t, "[vault]\nbookmarks = 42\n"), home)
 		assert.Error(t, err)
 	})
+
+	t.Run("the default provider of the vault is the directory", func(t *testing.T) {
+		file, err := Load(write(t, "[vault]\nbookmarks = \"~/notes\"\n"), home)
+		require.NoError(t, err)
+		assert.Equal(t, "dir", file.Vault.Provider)
+
+		missing, err := Load(filepath.Join(t.TempDir(), "config.toml"), home)
+		require.NoError(t, err)
+		assert.Equal(t, "dir", missing.Vault.Provider)
+	})
+
+	t.Run("a provider of the vault", func(t *testing.T) {
+		file, err := Load(write(t, "[vault]\nprovider = \"indexit\"\n"), home)
+		require.NoError(t, err)
+		assert.Equal(t, "indexit", file.Vault.Provider)
+	})
 }
 
 func TestCheckLoopback(t *testing.T) {

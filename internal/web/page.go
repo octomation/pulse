@@ -4,12 +4,14 @@ import (
 	"cmp"
 	"fmt"
 	"html/template"
+	"path/filepath"
 	"slices"
 	"strconv"
 	"strings"
 	"time"
 
 	"go.octolab.org/toolset/pulse/internal/details"
+	"go.octolab.org/toolset/pulse/internal/hide"
 	"go.octolab.org/toolset/pulse/internal/store"
 	"go.octolab.org/toolset/pulse/internal/trend"
 	"go.octolab.org/toolset/pulse/internal/watch"
@@ -28,7 +30,7 @@ type page struct {
 	// HiddenCount is the number of hidden cards, rendered or not.
 	HiddenCount int
 	Lists       []watch.ListStatus
-	Vault       watch.VaultStatus
+	Sources     []hide.Status
 	Problem     string
 	Empty       empty
 }
@@ -142,7 +144,7 @@ func (c card) Comment() string {
 func newPage(view watch.View, showHidden bool) page {
 	p := page{
 		Now: view.Now, ShowHidden: showHidden,
-		Lists: view.Lists, Vault: view.Vault, Problem: view.Problem,
+		Lists: view.Lists, Sources: view.Sources, Problem: view.Problem,
 	}
 	for _, c := range view.Cards {
 		switch {
@@ -159,11 +161,28 @@ func newPage(view watch.View, showHidden bool) page {
 	return p
 }
 
+func capital(s string) string {
+	if s == "" {
+		return s
+	}
+	return strings.ToUpper(s[:1]) + s[1:]
+}
+
 // emptyOf says what the page shows when no repository is new: "Nothing new"
-// without reservations only when no list is in error and their state is
-// recorded.
+// without reservations only when no list is in error, every source that
+// hides cards answered, and the state of the lists is recorded.
 func emptyOf(view watch.View) empty {
 	total := len(view.Lists)
+	unchecked := view.FailedSources()
+	names := make([]string, 0, len(unchecked))
+	for _, source := range unchecked {
+		names = append(names, "the "+source.Source)
+	}
+	// also is what the page says of the sources after another reservation.
+	also := ""
+	if len(names) > 0 {
+		also = " The list may also include what is already in " + strings.Join(names, " and ") + ", which could not be read."
+	}
 	switch failed := view.FailedLists(); {
 	case view.LoadedLists() == 0:
 		return empty{
@@ -176,7 +195,14 @@ func emptyOf(view watch.View) empty {
 			Kind:  "partial",
 			Title: "No new repositories in the lists that loaded",
 			Text: fmt.Sprintf("%s of %d failed to load, so this is not the whole picture. The reasons are above; Refresh tries again.",
-				plural(failed, "list", "lists"), total),
+				plural(failed, "list", "lists"), total) + also,
+		}
+	case len(unchecked) > 0:
+		return empty{
+			Kind:  "unchecked",
+			Title: "No new repositories, but " + strings.Join(names, " and ") + " could not be read",
+			Text: "Every repository of the lists is seen or bookmarked, but the list may include what is already in " +
+				strings.Join(names, " and ") + ". The reason is above.",
 		}
 	case view.Problem != "":
 		return empty{
@@ -224,6 +250,16 @@ func (h *handler) funcs() template.FuncMap {
 		"plural": plural,
 		// day is the date of the masthead.
 		"day": func(t time.Time) string { return local(t).Format("Monday, January 2, 2006") },
+		// home writes a path under the home directory with ~.
+		"home": func(path string) string {
+			if h.Home != "" {
+				if rest, found := strings.CutPrefix(path, h.Home+string(filepath.Separator)); found {
+					return "~" + string(filepath.Separator) + rest
+				}
+			}
+			return path
+		},
+		"capital": capital,
 		// month is a date to the month.
 		"month": func(t time.Time) string { return local(t).Format("January 2006") },
 		// date is a date without the time.

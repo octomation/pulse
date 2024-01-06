@@ -1,6 +1,7 @@
 // Package watch is the logic of trend-watch: it loads the lists, keeps the
-// hour between loads, and joins the snapshots with the marks and the vault
-// bookmarks into the view the page shows.
+// hour between loads, and joins the snapshots with the marks and the
+// sources of the hide facade, such as the vault, into the view the page
+// shows.
 package watch
 
 import (
@@ -12,9 +13,9 @@ import (
 	"sync"
 	"time"
 
+	"go.octolab.org/toolset/pulse/internal/hide"
 	"go.octolab.org/toolset/pulse/internal/store"
 	"go.octolab.org/toolset/pulse/internal/trend"
-	"go.octolab.org/toolset/pulse/internal/vault"
 )
 
 const (
@@ -41,9 +42,9 @@ type Options struct {
 	Store *store.Store
 	// Loader loads the lists.
 	Loader Loader
-	// Vault is the directory of the vault bookmarks; empty turns the
-	// filter off.
-	Vault string
+	// Hide asks the sources that may hide a card, such as the vault; none
+	// hides nothing.
+	Hide hide.Facade
 	// Now is the clock; nil is time.Now.
 	Now func() time.Time
 	// Timeout bounds the load of a list; zero is Timeout.
@@ -54,7 +55,7 @@ type Options struct {
 type Service struct {
 	store   *store.Store
 	loader  Loader
-	vault   string
+	hide    hide.Facade
 	now     func() time.Time
 	timeout time.Duration
 
@@ -74,7 +75,7 @@ type Service struct {
 
 // New returns the service.
 func New(o Options) *Service {
-	s := &Service{store: o.Store, loader: o.Loader, vault: o.Vault, now: o.Now, timeout: o.Timeout}
+	s := &Service{store: o.Store, loader: o.Loader, hide: o.Hide, now: o.Now, timeout: o.Timeout}
 	if s.now == nil {
 		s.now = time.Now
 	}
@@ -94,7 +95,7 @@ func (s *Service) Open(ctx context.Context) (View, error) {
 	if _, err := s.load(ctx, s.stale); err != nil {
 		return View{}, err
 	}
-	return s.View(), nil
+	return s.View(ctx), nil
 }
 
 // Refresh loads all six lists now. The outcome of each list is in the view;
@@ -352,24 +353,4 @@ func newMark(now time.Time, action store.Action, repo trend.Repo, comment string
 		}
 	}
 	return mark
-}
-
-// readVault reads the vault bookmarks for a view.
-func (s *Service) readVault() (VaultStatus, vault.Index) {
-	if s.vault == "" {
-		return VaultStatus{}, vault.Index{}
-	}
-	index, err := vault.Read(s.vault)
-	status := VaultStatus{
-		Configured: true, Dir: s.vault,
-		Repos: len(index.Repos), Notes: index.Notes, Broken: index.Broken,
-	}
-	if err != nil {
-		status.Error = err.Error()
-		if errors.Is(err, vault.ErrNoRepositories) {
-			status.Error = fmt.Sprintf("no note of %s names a repository", s.vault)
-		}
-		return status, vault.Index{}
-	}
-	return status, index
 }

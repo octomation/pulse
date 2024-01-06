@@ -70,9 +70,24 @@ aliases:
   directory of the config file.
 - With an unknown key in the file, pulse reports it and does not start.
 
+The page names the directory it reads, how many repositories its notes name
+and when the newest note changed, so a wrong or stale copy of your notes shows
+at a glance:
+
+```text
+Vault: 2712 repositories in 2647 notes · ~/Notes/Bookmarks/GitHub · newest note Nov 22, 2026, 20:45.
+```
+
+When the directory is not inside a vault that [Obsidian](https://obsidian.md/)
+knows on this computer, the page adds a warning below that line, as in
+`Vault: the directory is not inside any vault Obsidian knows on this computer, so it may be an old copy.`,
+and still hides what the notes name. pulse checks the list of vaults Obsidian
+keeps, so a vault Obsidian has never opened gives the warning too.
+
 Without the file, the filter is off and the page says so. When the directory
 cannot be read, or none of its notes names a repository, the page says that
-the list may include what is already in the vault.
+the list may include what is already in the vault, and it never says
+**Nothing new** without that reservation.
 
 pulse reads the file when it starts: after you change it, restart the
 service.
@@ -127,8 +142,7 @@ The page reads like a morning paper:
 - The masthead has the date, the counts, as in `54 new · 30 hidden`, and
   **Show hidden**, **Refresh** and **Mark all shown as seen**.
 - Below it are the six lists, each with the time of its last successful load
-  and the number of its repositories, and the state of the vault filter, as
-  in `Vault: 2 repositories in 2 notes.`
+  and the number of its repositories, and the state of the vault filter.
 - **Front page** holds the repositories that are in most lists at once, the
   first of them as the lead story. **Today**, **This week** and **This
   month** hold the others, each in the section of its shortest period.
