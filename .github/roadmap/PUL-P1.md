@@ -13,7 +13,7 @@ shortDescription: "OctoLab Platform development."
 public: true
 closed: false
 createdAt: 2022-05-07T06:25:58Z
-updatedAt: 2026-11-23T09:39:14Z
+updatedAt: 2026-11-23T14:17:00Z
 closedAt: null
 ---
 
@@ -134,11 +134,6 @@ closedAt: null
 - [ ] octomation/maintainer#50 — command: separate command structure and command execution
 - [ ] octomation/maintainer#51 — di: define service provider to inject it into command for lazy service initialization
 - [ ] octomation/maintainer#522 — github: contribution: lose no contribution at the edges of the monthly slices
-- [ ] [[PUL-6]] — web: calendar of past snapshots
-- [ ] [[PUL-7]] — core: hide through a facade, the vault as its first provider
-- [ ] [[PUL-9]] — core: a seen mark snoozes for a quarter
-- [ ] [[PUL-10]] — web: flow mode, one card at a time
-- [ ] [[PUL-11]] — web: a front page grid without holes
 
 ## Done
 
@@ -376,10 +371,15 @@ closedAt: null
 - [x] octomation/maintainer#509 — fetch: config: reject a broken per-repository path template and report it per repository
 - [x] octomation/maintainer#510 — skill: ship an agent skill for the maintainer CLI and publish it to octolab/skills
 - [x] octomation/maintainer#521 — github: contribution: count the days as the profile does, wherever the account is
+- [x] [[PUL-6]] — web: calendar of past snapshots
+- [x] [[PUL-7]] — core: hide through a facade, the vault as its first provider
+- [x] [[PUL-9]] — core: a seen mark snoozes for a quarter
 - [x] [[PUL-5]] — core: trend-watch without repeats
+- [x] [[PUL-10]] — web: flow mode, one card at a time
 - [x] octomation/maintainer#537 — makefile: remove the makefile build command
 - [x] octomation/maintainer#538 — cli: drop the proxy command, the unused mocks and the boilerplate feature
 - [x] octomation/maintainer#536 — go: vanity: remove the go vanity command
+- [x] [[PUL-11]] — web: a front page grid without holes
 
 ## Won't do
 

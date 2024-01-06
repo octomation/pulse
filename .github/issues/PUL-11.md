@@ -16,13 +16,13 @@ assignees:
 milestone: "[[PUL-M2]]"
 parent: null
 issueFields: {}
-state: OPEN
-stateReason: null
+state: CLOSED
+stateReason: COMPLETED
 duplicateOf: null
 createdAt: 2026-11-23T09:35:10Z
-updatedAt: 2026-11-23T10:43:55Z
+updatedAt: 2026-11-23T14:15:02Z
 lastEditedAt: 2026-11-23T10:43:55Z
-closedAt: null
+closedAt: 2026-11-23T14:15:02Z
 ---
 
 # web: a front page grid without holes

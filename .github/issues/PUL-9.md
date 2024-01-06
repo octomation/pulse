@@ -16,13 +16,13 @@ assignees:
 milestone: "[[PUL-M2]]"
 parent: null
 issueFields: {}
-state: OPEN
-stateReason: null
+state: CLOSED
+stateReason: COMPLETED
 duplicateOf: null
 createdAt: 2026-11-20T10:04:29Z
-updatedAt: 2026-11-23T09:58:11Z
+updatedAt: 2026-11-23T14:14:57Z
 lastEditedAt: 2026-11-23T09:36:00Z
-closedAt: null
+closedAt: 2026-11-23T14:14:57Z
 ---
 
 # core: a seen mark snoozes for a quarter

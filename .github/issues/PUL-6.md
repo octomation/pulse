@@ -16,13 +16,13 @@ assignees:
 milestone: "[[PUL-M2]]"
 parent: null
 issueFields: {}
-state: OPEN
-stateReason: null
+state: CLOSED
+stateReason: COMPLETED
 duplicateOf: null
 createdAt: 2026-11-20T09:31:16Z
-updatedAt: 2026-11-23T09:58:06Z
+updatedAt: 2026-11-23T14:14:53Z
 lastEditedAt: 2026-11-23T09:35:55Z
-closedAt: null
+closedAt: 2026-11-23T14:14:53Z
 ---
 
 # web: calendar of past snapshots

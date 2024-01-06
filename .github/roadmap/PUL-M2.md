@@ -5,13 +5,13 @@ databaseId: 19804125
 number: 2
 url: https://github.com/octomation/pulse/milestone/2
 title: "M2: Catch up at your own pace"
-state: OPEN
-openIssueCount: 5
-closedIssueCount: 0
+state: CLOSED
+openIssueCount: 0
+closedIssueCount: 5
 dueOn: null
 createdAt: 2026-11-23T09:57:00Z
-updatedAt: 2026-11-23T10:35:23Z
-closedAt: null
+updatedAt: 2026-11-23T14:15:39Z
+closedAt: 2026-11-23T14:15:39Z
 ---
 
 # M2: Catch up at your own pace
@@ -30,8 +30,8 @@ A morning you did not finish is not lost. Every day pulse loaded the lists has a
 
 ## Issues
 
-- [ ] [[PUL-6]] — web: calendar of past snapshots
-- [ ] [[PUL-7]] — core: hide through a facade, the vault as its first provider
-- [ ] [[PUL-9]] — core: a seen mark snoozes for a quarter
-- [ ] [[PUL-10]] — web: flow mode, one card at a time
-- [ ] [[PUL-11]] — web: a front page grid without holes
+- [x] [[PUL-6]] — web: calendar of past snapshots
+- [x] [[PUL-7]] — core: hide through a facade, the vault as its first provider
+- [x] [[PUL-9]] — core: a seen mark snoozes for a quarter
+- [x] [[PUL-10]] — web: flow mode, one card at a time
+- [x] [[PUL-11]] — web: a front page grid without holes

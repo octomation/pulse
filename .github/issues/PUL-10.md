@@ -16,13 +16,13 @@ assignees:
 milestone: "[[PUL-M2]]"
 parent: null
 issueFields: {}
-state: OPEN
-stateReason: null
+state: CLOSED
+stateReason: COMPLETED
 duplicateOf: null
 createdAt: 2026-11-20T10:22:46Z
-updatedAt: 2026-11-23T09:57:55Z
+updatedAt: 2026-11-23T14:14:59Z
 lastEditedAt: 2026-11-23T09:35:52Z
-closedAt: null
+closedAt: 2026-11-23T14:14:59Z
 ---
 
 # web: flow mode, one card at a time
