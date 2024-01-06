@@ -13,7 +13,7 @@ shortDescription: "OctoLab Platform development."
 public: true
 closed: false
 createdAt: 2022-05-07T06:25:58Z
-updatedAt: 2026-11-07T18:52:57Z
+updatedAt: 2026-11-21T06:33:13Z
 closedAt: null
 ---
 
@@ -38,9 +38,7 @@ closedAt: null
 - [ ] octomation/go-service#18 — dist: support docker publishing
 - [ ] octomation/go-service#6 — dist: docker: compare distroless image with alpine
 - [ ] octomation/go-tool#5 — boilerplate: basic features
-- [ ] octomation/maintainer#4 — how to warmup godoc and vanity url
 - [ ] octomation/maintainer#19 — transition entity
-- [ ] octomation/maintainer#21 — improve vanity support
 - [ ] octomation/maintainer#31 — command: github backup repository
 - [ ] octomation/go-tool#18 — docs: readme: describe template and its purpose
 - [ ] octomation/go-service#41 — docs: readme: describe template and its purpose
@@ -56,7 +54,6 @@ closedAt: null
 - [ ] octomation/maintainer#78 — github: contribution: tips and tricks, daily snapshot
 - [ ] octomation/maintainer#79 — github: contribution: extend suggest command by stats
 - [ ] octomation/go-service#55 — ci/cd: sign commits from goreleaser
-- [ ] octomation/maintainer#81 — makefile: build: allow include recursively
 - [ ] octomation/go-module#56 — ci/cd: replace settings bot by github action
 - [ ] octomation/settings-action#16 — action: implement settings runner
 - [ ] octomation/go-service#72 — dev: use cdk8s for k8s
@@ -80,15 +77,12 @@ closedAt: null
 - [ ] octomation/maintainer#129 — github: contribution: calculate contrib to define better day for commits
 - [ ] octomation/maintainer#130 — github: contribution: refactor histogram command
 - [ ] octomation/maintainer#132 — linear: generate client
-- [ ] octomation/maintainer#134 — go: vanity: build from git submodules and go.work instead of modules.yml
-- [ ] octomation/maintainer#135 — go: rename: command to rename current module and others
 - [ ] octomation/go-tool#68 — go: support coverage profiling for integration tests
 - [ ] octomation/go-tool#72 — go: cli: provide boilerplate for better TUI
 - [ ] octomation/watchub#1 — ci/cd: configure docker image publishing
 - [ ] octomation/go-module#130 — ci/cd: disable some actions by default
 - [ ] [[issue-1]] — core: gitboard port
 - [ ] [[issue-2]] — core: watchub port
-- [ ] [[issue-3]] — core: rethink tablo
 - [ ] [[issue-4]] — core: workflow flags
 - [ ] octomation/go-tool#91 — ci/cd: speed up works with tools
 - [ ] octomation/go-service#109 — dev: gitops with argocd and crossplane
@@ -120,6 +114,11 @@ closedAt: null
 - [ ] octomation/go-service#306 — deps: broken go.mod
 - [ ] octomation/go-module#394 — dev: support agents.md
 - [ ] octomation/go-module#395 — dev: support new schedule for dependabot
+- [ ] [[issue-92]] — core: indexit as the vault provider
+- [ ] [[issue-93]] — core: a seen mark snoozes for a quarter
+- [ ] [[issue-94]] — web: flow mode, one card at a time
+- [ ] octomation/maintainer#25 — add possibility to compare configuration of repos
+- [ ] octomation/maintainer#466 — fetch: remotes: configure upstream for forks and check remote consistency
 
 ## To do
 
@@ -128,6 +127,8 @@ closedAt: null
 - [ ] octomation/maintainer#44 — github: contribution: refactor command and view
 - [ ] octomation/maintainer#45 — github: contribution: extend support lookup for a month
 - [ ] octomation/maintainer#48 — ci/cd: tools: test act for local development
+- [ ] [[issue-90]] — web: calendar of past snapshots
+- [ ] [[issue-91]] — core: hide through a facade, the vault as its first provider
 
 ## In progress
 
@@ -141,7 +142,6 @@ closedAt: null
 
 > state: CLOSED · stateReason: COMPLETED
 
-- [x] [[issue-85]] — core: trend-watch without repeats
 - [x] octomation/maintainer#33 — provide github access token by command flag
 - [x] octomation/maintainer#26 — implement github contribution lookup command
 - [x] octomation/maintainer#38 — github: contribution: lookup shows incorrect scope for 1 week with now ts
@@ -309,6 +309,7 @@ closedAt: null
 - [x] octomation/go-module#125 — dev: split Taskfile and prepare to autogenerate it
 - [x] octomation/go-module#128 — dev: move docs research outside the codebase and create a discussion for that
 - [x] octomation/go-module#131 — docs: fix broken cover image
+- [x] [[issue-3]] — core: rethink tablo
 - [x] octolab/install#1 — research: brew installation
 - [x] octomation/maintainer#148 — github: contribution: edge case for contrib suggestion
 - [x] octomation/maintainer#150 — github: contribution: broken heatmap
@@ -373,6 +374,10 @@ closedAt: null
 - [x] octomation/maintainer#509 — fetch: config: reject a broken per-repository path template and report it per repository
 - [x] octomation/maintainer#510 — skill: ship an agent skill for the maintainer CLI and publish it to octolab/skills
 - [x] octomation/maintainer#521 — github: contribution: count the days as the profile does, wherever the account is
+- [x] [[issue-85]] — core: trend-watch without repeats
+- [x] octomation/maintainer#537 — makefile: remove the makefile build command
+- [x] octomation/maintainer#538 — cli: drop the proxy command, the unused mocks and the boilerplate feature
+- [x] octomation/maintainer#536 — go: vanity: remove the go vanity command
 
 ## Won't do
 
@@ -382,9 +387,11 @@ closedAt: null
 - [x] octomation/go-service#8 — up service boilerplate
 - [x] octomation/go-service#7 — describe boilerplate api
 - [x] octomation/makefiles#53 — run tests
+- [x] octomation/maintainer#4 — how to warmup godoc and vanity url
 - [x] octomation/maintainer#14 — add dry-run option for github labels
 - [x] octomation/maintainer#15 — extend octolab preset by other repositories
 - [x] octomation/maintainer#16 — org: prepare release v0.2.0
+- [x] octomation/maintainer#21 — improve vanity support
 - [x] octomation/maintainer#32 — command: labels classify issue
 - [x] octomation/go-module#34 — ci/cd: experimental labeler
 - [x] octomation/go-module#37 — deps: tools: add benchcmp
@@ -398,7 +405,10 @@ closedAt: null
 - [x] octomation/go-module#47 — ci/cd: add DevSkim as security check step
 - [x] octomation/go-service#52 — ci/cd: add DevSkim as security check step
 - [x] octomation/go-tool#28 — ci/cd: add DevSkim as security check step
+- [x] octomation/maintainer#81 — makefile: build: allow include recursively
 - [x] octomation/maintainer#89 — git: config: contribution since
 - [x] octomation/maintainer#99 — github: contribution: invalid suggestion for 2022 year
 - [x] octomation/maintainer#123 — github: contribution: suggest and lookup paniced on Sunday
+- [x] octomation/maintainer#134 — go: vanity: build from git submodules and go.work instead of modules.yml
+- [x] octomation/maintainer#135 — go: rename: command to rename current module and others
 - [x] octomation/maintainer#136 — github: contribution: incorrect suggest for today
