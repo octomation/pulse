@@ -27,6 +27,8 @@ closedAt: null
 
 ## Backlog
 
+> state: OPEN
+
 - [ ] draft: Taskfiles core concept
 - [ ] octomation/go-tool#20 — ci/cd: sign commits from goreleaser
 - [ ] octomation/go-tool#6 — boilerplate: graceful wrap panic stack trace
@@ -121,17 +123,23 @@ closedAt: null
 
 ## To do
 
+> state: OPEN
+
 - [ ] octomation/maintainer#44 — github: contribution: refactor command and view
 - [ ] octomation/maintainer#45 — github: contribution: extend support lookup for a month
 - [ ] octomation/maintainer#48 — ci/cd: tools: test act for local development
 
 ## In progress
 
+> state: OPEN
+
 - [ ] octomation/maintainer#50 — command: separate command structure and command execution
 - [ ] octomation/maintainer#51 — di: define service provider to inject it into command for lazy service initialization
 - [ ] octomation/maintainer#522 — github: contribution: lose no contribution at the edges of the monthly slices
 
 ## Done
+
+> state: CLOSED · stateReason: COMPLETED
 
 - [x] [[issue-85]] — core: trend-watch without repeats
 - [x] octomation/maintainer#33 — provide github access token by command flag
@@ -367,6 +375,8 @@ closedAt: null
 - [x] octomation/maintainer#521 — github: contribution: count the days as the profile does, wherever the account is
 
 ## Won't do
+
+> state: CLOSED · stateReason: NOT_PLANNED, DUPLICATE
 
 - [x] octomation/go-service#15 — octomate service creation
 - [x] octomation/go-service#8 — up service boilerplate
