@@ -1,5 +1,5 @@
 ---
-code: null
+code: PUL-3
 id: I_kwDOJvS0hM5osnIw
 databaseId: 1756525104
 number: 3
@@ -40,16 +40,16 @@ The rethinking is done: this repository, first named tablo, became pulse,
 "your morning, with a hand on the pulse". It is one local page that shows
 only what is new since I last looked, with an action on each item, and it is
 the place for the other kinds of external activity of this backlog:
-[[issue-1]], [[issue-2]], [[issue-4]].
+[[PUL-1]], [[PUL-2]], [[PUL-4]].
 
-The first version, [[issue-85]], released as v0.1.0, does this for the
+The first version, [[PUL-5]], released as v0.1.0, does this for the
 GitHub trends.
 
 ## Acceptance criteria
 
 - [x] The concept has a name and a shape: pulse, one page of what is new,
   with marks that hide what was seen.
-- [x] A first release implements it: v0.1.0, [[issue-85]].
+- [x] A first release implements it: v0.1.0, [[PUL-5]].
 
 ## Out of scope
 

@@ -1,5 +1,5 @@
 ---
-code: null
+code: PUL-6
 id: I_kwDOJvS0hM8AAAABg_MSkw
 databaseId: 6508712595
 number: 90
@@ -13,15 +13,15 @@ labels:
   - "effort: medium"
 assignees:
   - kamilsk
-milestone: "[[milestone-1]]"
+milestone: "[[PUL-M1]]"
 parent: null
 issueFields: {}
 state: OPEN
 stateReason: null
 duplicateOf: null
 createdAt: 2026-11-20T09:31:16Z
-updatedAt: 2026-11-22T16:27:00Z
-lastEditedAt: 2026-11-22T16:26:59Z
+updatedAt: 2026-11-22T16:31:12Z
+lastEditedAt: 2026-11-22T16:31:12Z
 closedAt: null
 ---
 
@@ -31,7 +31,7 @@ closedAt: null
 
 The page shows only the latest snapshot of each list. When I skip a morning,
 what trended yesterday or the day before is gone from the page, although
-pulse keeps every load on disk ([[issue-85#Snapshots]]). I want to go back
+pulse keeps every load on disk ([[PUL-5]], "Snapshots"). I want to go back
 to any day that has snapshots, see what the lists held then, and catch up on
 what I have not seen yet, with "Show hidden" working there as it does today.
 

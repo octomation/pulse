@@ -1,5 +1,5 @@
 ---
-code: null
+code: PUL-9
 id: I_kwDOJvS0hM8AAAABg_rpGA
 databaseId: 6509226264
 number: 93
@@ -13,15 +13,15 @@ labels:
   - "effort: easy"
 assignees:
   - kamilsk
-milestone: "[[milestone-1]]"
+milestone: "[[PUL-M1]]"
 parent: null
 issueFields: {}
 state: OPEN
 stateReason: null
 duplicateOf: null
 createdAt: 2026-11-20T10:04:29Z
-updatedAt: 2026-11-20T10:28:05Z
-lastEditedAt: null
+updatedAt: 2026-11-22T16:31:15Z
+lastEditedAt: 2026-11-22T16:31:15Z
 closedAt: null
 ---
 
@@ -32,7 +32,7 @@ closedAt: null
 A repository I skip today may be skipped only because its direction does not
 interest me now. My interests change, and a repository that trends again in a
 few months deserves another look. Today a seen mark has no expiry
-([[issue-85#The page]]), so a skipped repository is hidden for good.
+([[PUL-5]], "The page"), so a skipped repository is hidden for good.
 
 "Seen" should work as a snooze: it hides the repository for a quarter, and
 when the repository is back on the lists after that, I see it again and
@@ -61,7 +61,7 @@ $ open http://pulse.localhost:17842/        # 2027-02-21: owner/name trends agai
 - A repository in the vault stays hidden whatever its marks.
 - Under "Show hidden", a snoozed repository says when it was seen, how, and
   until when it is hidden.
-- The same rule holds for every day of the calendar ([[issue-90]]): a past
+- The same rule holds for every day of the calendar ([[PUL-6]]): a past
   day is judged by the marks as they stand now, so an expired snooze shows the
   repository on that day too.
 - The marks already on disk follow the new rule: a mark older than the period

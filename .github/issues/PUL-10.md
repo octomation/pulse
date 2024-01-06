@@ -1,5 +1,5 @@
 ---
-code: null
+code: PUL-10
 id: I_kwDOJvS0hM8AAAABg_8ldw
 databaseId: 6509503863
 number: 94
@@ -13,7 +13,7 @@ labels:
   - "effort: medium"
 assignees:
   - kamilsk
-milestone: "[[milestone-1]]"
+milestone: "[[PUL-M1]]"
 parent: null
 issueFields: {}
 state: OPEN
@@ -78,7 +78,7 @@ $ open http://pulse.localhost:17842/days/2026-11-19/flow/   # the cards of that 
 - The reader of the repository opens from the card and returns to the same
   card.
 - The mode has its own path, not a query parameter: `/flow/` for today and
-  `/days/YYYY-MM-DD/flow/` for a day of the calendar ([[issue-90]]), over the
+  `/days/YYYY-MM-DD/flow/` for a day of the calendar ([[PUL-6]]), over the
   cards of that day.
 - The keys work without the mouse, and swipes work on a touch screen.
 
@@ -106,4 +106,4 @@ $ open http://pulse.localhost:17842/days/2026-11-19/flow/   # the cards of that 
 ## Out of scope
 
 - Undoing an answer.
-- Snoozing for a chosen period from the flow ([[issue-93]] sets the period).
+- Snoozing for a chosen period from the flow ([[PUL-9]] sets the period).

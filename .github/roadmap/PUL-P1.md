@@ -1,5 +1,5 @@
 ---
-code: null
+code: PUL-P1
 id: PVT_kwDOAuheaM4ABq6c
 fullDatabaseId: "437916"
 number: 1
@@ -81,9 +81,9 @@ closedAt: null
 - [ ] octomation/go-tool#72 — go: cli: provide boilerplate for better TUI
 - [ ] octomation/watchub#1 — ci/cd: configure docker image publishing
 - [ ] octomation/go-module#130 — ci/cd: disable some actions by default
-- [ ] [[issue-1]] — core: gitboard port
-- [ ] [[issue-2]] — core: watchub port
-- [ ] [[issue-4]] — core: workflow flags
+- [ ] [[PUL-1]] — core: gitboard port
+- [ ] [[PUL-2]] — core: watchub port
+- [ ] [[PUL-4]] — core: workflow flags
 - [ ] octomation/go-tool#91 — ci/cd: speed up works with tools
 - [ ] octomation/go-service#109 — dev: gitops with argocd and crossplane
 - [ ] octomation/maintainer#153 — template: go new support
@@ -114,9 +114,9 @@ closedAt: null
 - [ ] octomation/go-service#306 — deps: broken go.mod
 - [ ] octomation/go-module#394 — dev: support agents.md
 - [ ] octomation/go-module#395 — dev: support new schedule for dependabot
-- [ ] [[issue-92]] — core: indexit as the vault provider
-- [ ] [[issue-93]] — core: a seen mark snoozes for a quarter
-- [ ] [[issue-94]] — web: flow mode, one card at a time
+- [ ] [[PUL-8]] — core: indexit as the vault provider
+- [ ] [[PUL-9]] — core: a seen mark snoozes for a quarter
+- [ ] [[PUL-10]] — web: flow mode, one card at a time
 - [ ] octomation/maintainer#25 — add possibility to compare configuration of repos
 - [ ] octomation/maintainer#466 — fetch: remotes: configure upstream for forks and check remote consistency
 
@@ -127,8 +127,8 @@ closedAt: null
 - [ ] octomation/maintainer#44 — github: contribution: refactor command and view
 - [ ] octomation/maintainer#45 — github: contribution: extend support lookup for a month
 - [ ] octomation/maintainer#48 — ci/cd: tools: test act for local development
-- [ ] [[issue-90]] — web: calendar of past snapshots
-- [ ] [[issue-91]] — core: hide through a facade, the vault as its first provider
+- [ ] [[PUL-6]] — web: calendar of past snapshots
+- [ ] [[PUL-7]] — core: hide through a facade, the vault as its first provider
 
 ## In progress
 
@@ -309,7 +309,7 @@ closedAt: null
 - [x] octomation/go-module#125 — dev: split Taskfile and prepare to autogenerate it
 - [x] octomation/go-module#128 — dev: move docs research outside the codebase and create a discussion for that
 - [x] octomation/go-module#131 — docs: fix broken cover image
-- [x] [[issue-3]] — core: rethink tablo
+- [x] [[PUL-3]] — core: rethink tablo
 - [x] octolab/install#1 — research: brew installation
 - [x] octomation/maintainer#148 — github: contribution: edge case for contrib suggestion
 - [x] octomation/maintainer#150 — github: contribution: broken heatmap
@@ -374,7 +374,7 @@ closedAt: null
 - [x] octomation/maintainer#509 — fetch: config: reject a broken per-repository path template and report it per repository
 - [x] octomation/maintainer#510 — skill: ship an agent skill for the maintainer CLI and publish it to octolab/skills
 - [x] octomation/maintainer#521 — github: contribution: count the days as the profile does, wherever the account is
-- [x] [[issue-85]] — core: trend-watch without repeats
+- [x] [[PUL-5]] — core: trend-watch without repeats
 - [x] octomation/maintainer#537 — makefile: remove the makefile build command
 - [x] octomation/maintainer#538 — cli: drop the proxy command, the unused mocks and the boilerplate feature
 - [x] octomation/maintainer#536 — go: vanity: remove the go vanity command

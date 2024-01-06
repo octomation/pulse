@@ -1,5 +1,5 @@
 ---
-code: null
+code: PUL-8
 id: I_kwDOJvS0hM8AAAABg_MaAQ
 databaseId: 6508714497
 number: 92
@@ -34,7 +34,7 @@ needs to know "is this already in my notes"; each of them can be pointed at a
 wrong copy without noticing. indexit is to keep the indexes of the vault
 (octopot/indexit#147), and
 pulse should ask it through the facade of
-[[issue-91]] instead of reading
+[[PUL-7]] instead of reading
 the files.
 
 ## PoC

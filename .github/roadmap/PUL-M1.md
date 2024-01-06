@@ -1,5 +1,5 @@
 ---
-code: null
+code: PUL-M1
 id: MI_kwDOJvS0hM4BLPJQ
 databaseId: 19722832
 number: 1
@@ -20,7 +20,7 @@ History, chronology and the experience of going through the cards: a calendar of
 
 ## Issues
 
-- [ ] [[issue-90]] — web: calendar of past snapshots
-- [ ] [[issue-91]] — core: hide through a facade, the vault as its first provider
-- [ ] [[issue-93]] — core: a seen mark snoozes for a quarter
-- [ ] [[issue-94]] — web: flow mode, one card at a time
+- [ ] [[PUL-6]] — web: calendar of past snapshots
+- [ ] [[PUL-7]] — core: hide through a facade, the vault as its first provider
+- [ ] [[PUL-9]] — core: a seen mark snoozes for a quarter
+- [ ] [[PUL-10]] — web: flow mode, one card at a time

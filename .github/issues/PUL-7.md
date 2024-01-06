@@ -1,5 +1,5 @@
 ---
-code: null
+code: PUL-7
 id: I_kwDOJvS0hM8AAAABg_MWBQ
 databaseId: 6508713477
 number: 91
@@ -13,7 +13,7 @@ labels:
   - "effort: medium"
 assignees:
   - kamilsk
-milestone: "[[milestone-1]]"
+milestone: "[[PUL-M1]]"
 parent: null
 issueFields: {}
 state: OPEN
@@ -36,7 +36,7 @@ told me that the notes I had just restored were not the ones pulse read.
 
 The answer to "may this repository be hidden, and why" should come from one
 place with one contract, so that the vault can later be answered by indexit
-([[issue-92]]) instead of pulse reading the
+([[PUL-8]]) instead of pulse reading the
 files itself, and other reasons can follow.
 
 ## PoC
@@ -87,7 +87,7 @@ type Provider interface {
 
 ## Acceptance criteria
 
-- [ ] The tests of the vault filter from [[issue-85]] pass through the
+- [ ] The tests of the vault filter from [[PUL-5]] pass through the
   facade unchanged.
 - [ ] Test: a provider that fails leaves its repositories shown, and the page
   names the source and the error.
@@ -103,5 +103,5 @@ type Provider interface {
 
 ## Out of scope
 
-- Reading the vault through indexit: [[issue-92]].
+- Reading the vault through indexit: [[PUL-8]].
 - Seen marks and bookmarks as providers.
