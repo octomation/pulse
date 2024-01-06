@@ -494,7 +494,8 @@ func TestInterestingCreatesBookmark(t *testing.T) {
 	assert.Equal(t, "hidden", card.state)
 	assert.Equal(t, "Marked as interesting on Nov 18, 2026, 08:15", card.reasons["seen"])
 	assert.Equal(t, "Bookmarked in pulse: try for the hub", card.reasons["bookmark"])
-	assert.Contains(t, card.html, `name="comment" value="try for the hub"`)
+	assert.Contains(t, s.get("/repos/ghostty-org/ghostty").Body.String(), `name="comment" value="try for the hub"`,
+		"the reader holds the comment")
 	assert.Equal(t, "Bookmarked in pulse, without a comment", page.card(t, "zed-industries/zed").reasons["bookmark"])
 
 	t.Run("interesting again replaces the comment and keeps the place", func(t *testing.T) {
@@ -512,8 +513,9 @@ func TestInterestingCreatesBookmark(t *testing.T) {
 
 		card := s.open("/hidden/").card(t, "ollama/ollama")
 		assert.Equal(t, map[string]string{"seen": "Skipped on Nov 18, 2026, until Feb 18, 2027"}, card.reasons)
-		assert.Contains(t, card.html, `data-action="interesting"`)
-		assert.NotContains(t, card.html, `data-action="skip"`)
+		story := s.get("/repos/ollama/ollama").Body.String()
+		assert.Contains(t, story, `data-action="interesting"`, "the reader rescues it")
+		assert.NotContains(t, story, `data-action="skip"`)
 
 		require.Equal(t, http.StatusOK, s.mark("interesting", "ollama/ollama", "after all").Code)
 		urls, _ = export()
@@ -689,12 +691,15 @@ func TestPageAndAssets(t *testing.T) {
 	assert.NotContains(t, body, "<style")
 	assert.NotContains(t, body, "onclick=")
 
-	// The hooks of the controls.
+	// The hooks of the controls. A card holds text only: the answers are in
+	// the reader and in flow mode.
 	for _, hook := range []string{
-		`data-action="refresh"`, `data-action="toggle-hidden"`, `data-action="seen-all"`,
-		`data-action="interesting"`, `data-action="skip"`, `name="comment"`,
+		`data-action="refresh"`, `data-action="toggle-hidden"`, `data-action="seen-all"`, `data-action="flow"`,
 	} {
 		assert.Contains(t, body, hook)
+	}
+	for _, hook := range []string{`data-action="interesting"`, `data-action="skip"`, `name="comment"`} {
+		assert.NotContains(t, body, hook)
 	}
 	assert.Contains(t, body, `aria-checked="false" data-action="toggle-hidden" href="/hidden/"`)
 	assert.Contains(t, s.get("/hidden/").Body.String(), `aria-checked="true" data-action="toggle-hidden" href="/"`)

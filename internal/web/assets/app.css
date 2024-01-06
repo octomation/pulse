@@ -127,16 +127,7 @@ i { font-style: normal; color: var(--faint); }
 .section-head h2 { margin: 0; font: 800 13px/1.4 var(--sans); letter-spacing: .16em; text-transform: uppercase; }
 .section-head p { margin: 0; font-style: italic; color: var(--soft); font-size: 14px; }
 
-.cards { display: grid; grid-template-columns: repeat(3, 1fr); column-gap: 0; }
-.card {
-  padding: 18px 22px 20px; min-width: 0;
-  border-left: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
-  margin-left: -1px;
-  display: flex; flex-direction: column;
-  transition: opacity .15s;
-}
-.cards > .card { border-left-color: var(--rule); }
-.card.is-busy { opacity: .45; }
+.story.is-busy { opacity: .45; }
 .kicker {
   margin: 0 0 6px; font: 700 10.5px/1.4 var(--sans); letter-spacing: .14em; text-transform: uppercase; color: var(--accent);
 }
@@ -158,7 +149,7 @@ i { font-style: normal; color: var(--faint); }
 .reasons { list-style: none; margin: 10px 0 0; padding: 8px 0 0; border-top: 1px dotted var(--rule); font-style: italic; font-size: 14px; color: var(--soft); }
 .reasons q { color: var(--ink); }
 
-.actions { margin-top: auto; padding-top: 14px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.actions { padding-top: 14px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .actions input {
   flex: 1 1 100%; min-width: 0;
   font: italic 14.5px/1.4 var(--serif); color: var(--ink);
@@ -168,15 +159,11 @@ i { font-style: normal; color: var(--faint); }
 .actions input:focus { outline: 0; border-bottom-color: var(--ink); }
 .card-error, .story-error { margin: 8px 0 0; color: var(--error); font: 13px/1.4 var(--sans); }
 
-/* The front page: the lead story across two columns and two rows */
-.card.is-lead { grid-column: span 2; grid-row: span 2; padding: 24px 28px 26px; }
-.card.is-lead .card-name { font-size: clamp(38px, 4.6vw, 60px); line-height: 1.02; letter-spacing: -.025em; }
-.card.is-lead .card-name .owner { font-size: 14px; margin-bottom: 4px; }
-.card.is-lead .description { font-size: 21px; line-height: 1.42; margin-top: 16px; }
-.card.is-lead .description::first-letter {
+.is-lead .card-name .owner { font-size: 14px; margin-bottom: 4px; }
+.is-lead .description::first-letter {
   float: left; font: 800 3.25em/.82 var(--display); padding: .06em .09em 0 0; color: var(--accent);
 }
-.card.is-lead .kicker { font-size: 11.5px; }
+.is-lead .kicker { font-size: 11.5px; }
 
 /* Hidden cards read quieter */
 .card.is-hidden .card-name { font-size: 19px; color: var(--soft); }
@@ -235,7 +222,6 @@ kbd { font: 600 11px/1 var(--sans); border: 1px solid var(--rule); border-radius
 .readme { flex: 1 0 70vh; width: 100%; margin-top: 18px; border: 0; border-top: 3px double var(--heavy); background: var(--sheet); }
 
 @media (max-width: 1080px) {
-  .cards { grid-template-columns: repeat(2, 1fr); }
   .lists { grid-template-columns: repeat(3, 1fr); }
   .list:nth-child(4) { border-left: 0; padding-left: 0; }
 }
@@ -248,11 +234,8 @@ kbd { font: 600 11px/1 var(--sans); border: 1px solid var(--rule); border-radius
   .reader-bar { padding: 10px 16px; }
 }
 @media (max-width: 520px) {
-  .cards { grid-template-columns: 1fr; }
-  .card.is-lead { grid-column: auto; grid-row: auto; }
   .dateline { flex-direction: column; align-items: center; gap: 2px; }
 }
-.card.is-lead .actions { margin-top: 26px; max-width: 520px; }
 
 /* The day of the paper and the calendar of the days with snapshots */
 .day-nav { display: inline-flex; align-items: baseline; gap: 8px; position: relative; }
@@ -321,4 +304,58 @@ body.is-flow { max-width: 760px; padding-bottom: 200px; }
   .flow-answers { gap: 6px; }
   .flow-answers .button { padding: 14px 4px; letter-spacing: .04em; }
   .calendar-sheet { left: -8px; }
+}
+
+/* One grid, one rhythm. The page is one grid of three columns from the
+   front page to the last section, two on a narrow screen and one on a
+   phone; no section changes it. A card is text only, the answers are in
+   the reader and in flow mode, and its parts sit on rows it shares with the
+   other cards of its row (subgrid), so their kickers, names, descriptions
+   and lists line up. The rhythm is a step of 8px. */
+:root { --step: 8px; --gutter: 40px; }
+.section { margin-top: calc(var(--step) * 6); }
+.section-head { margin-bottom: 0; padding-top: var(--step); }
+.cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: var(--gutter); }
+.card {
+  grid-row: span 4; display: grid; grid-template-rows: subgrid; row-gap: 0; align-content: start; min-width: 0;
+  padding: calc(var(--step) * 2.5) 0 calc(var(--step) * 3);
+  border-top: 1px solid var(--rule); transition: opacity .15s;
+}
+.is-hidden-part .card { grid-row: span 5; }
+.section-head + .cards > .card:nth-child(-n+3) { border-top: 0; }
+.card .kicker { margin: 0 0 var(--step); min-height: 1.4em; align-self: end; }
+.card .card-name { font-size: 24px; line-height: 1.15; text-wrap: balance; }
+.card .card-name .owner { margin-bottom: 2px; }
+.card .description {
+  margin: var(--step) 0 0; font-size: 16px; line-height: 24px; text-wrap: pretty;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden;
+}
+.card .description:empty { display: block; }
+.card .badges { margin: calc(var(--step) * 1.5) 0 0; align-self: start; }
+.card .reasons { margin-top: var(--step); }
+.card:has(.description:hover) .card-name .name { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; text-decoration-color: var(--accent); }
+.card.is-hidden .card-name { font-size: 19px; }
+
+/* The front page: the lead takes two columns, the next two stories stand
+   beside it in the third, the rest go on in rows of three. */
+.is-front .card.is-lead { grid-column: 1 / span 2; grid-row: 1 / span 8; display: block; border-top: 0; }
+.is-front .card.is-lead:only-child { grid-column: 1 / -1; }
+.is-front .card.is-lead .card-name { font-size: clamp(44px, 5.4vw, 72px); line-height: 1.02; letter-spacing: -.025em; }
+.is-front .card.is-lead .description { -webkit-line-clamp: 5; font-size: 22px; line-height: 32px; margin-top: calc(var(--step) * 2); max-width: 34em; }
+.is-front .card.is-lead .badges { margin-top: calc(var(--step) * 2); }
+.is-front .card.is-lead ~ .card:nth-child(n+3) { border-top: 1px solid var(--rule); }
+.is-front .card.is-lead ~ .card:nth-child(-n+3) .description { -webkit-line-clamp: 2; }
+
+@media (max-width: 1080px) {
+  .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .section-head + .cards > .card:nth-child(3) { border-top: 1px solid var(--rule); }
+  .is-front .card.is-lead { grid-column: 1 / -1; grid-row: auto; }
+  .is-front .card.is-lead ~ .card { border-top: 1px solid var(--rule); }
+}
+@media (max-width: 620px) {
+  .cards { grid-template-columns: minmax(0, 1fr); }
+  .section-head + .cards > .card:nth-child(2) { border-top: 1px solid var(--rule); }
+  .card { padding: calc(var(--step) * 2) 0; }
+  .is-front .card.is-lead .card-name { font-size: 40px; }
+  .is-front .card.is-lead .description { font-size: 18px; line-height: 28px; }
 }

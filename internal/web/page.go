@@ -164,8 +164,9 @@ const frontPage = 7
 
 // layout sorts the shown cards into the sections. The front page takes the
 // repositories that are in most lists, the first of them as the lead; the
-// others go to the section of their shortest period.
-func layout(shown []card) []section {
+// others go to the section of their shortest period. A past day names the
+// sections for that day.
+func layout(shown []card, past bool) []section {
 	best := func(c card, period trend.Period) int {
 		rank := 0
 		for _, m := range c.Lists {
@@ -189,9 +190,9 @@ func layout(shown []card) []section {
 	}
 	sections := []section{front}
 	for _, part := range []section{
-		{Kind: string(trend.Daily), Title: "Today", Note: "New in the daily lists"},
-		{Kind: string(trend.Weekly), Title: "This week", Note: "New in the weekly lists"},
-		{Kind: string(trend.Monthly), Title: "This month", Note: "New in the monthly lists"},
+		{Kind: string(trend.Daily), Title: pick(past, "That day", "Today"), Note: "New in the daily lists"},
+		{Kind: string(trend.Weekly), Title: pick(past, "That week", "This week"), Note: "New in the weekly lists"},
+		{Kind: string(trend.Monthly), Title: pick(past, "That month", "This month"), Note: "New in the monthly lists"},
 	} {
 		period := trend.Period(part.Kind)
 		var rest []card
@@ -207,6 +208,15 @@ func layout(shown []card) []section {
 		sections = append(sections, part)
 	}
 	return slices.DeleteFunc(sections, func(s section) bool { return len(s.Cards) == 0 })
+}
+
+// pick returns past on a page of a past day, else today: the sections of a
+// past day are named for that day.
+func pick(isPast bool, past, today string) string {
+	if isPast {
+		return past
+	}
+	return today
 }
 
 // card is a repository on the page.
@@ -261,7 +271,7 @@ func newPage(view watch.View, showHidden bool) page {
 		}
 	}
 	p.HiddenCount = view.HiddenCount()
-	p.Sections = layout(p.Shown)
+	p.Sections = layout(p.Shown, view.Past())
 	for _, part := range p.Sections {
 		p.Flow = append(p.Flow, part.Cards...)
 	}
@@ -415,8 +425,8 @@ func (h *handler) funcs() template.FuncMap {
 			return digits
 		},
 		"among": func(n int) string {
-			if n == 1 {
-				return "in one list"
+			if n < 2 {
+				return ""
 			}
 			return fmt.Sprintf("in %d lists", n)
 		},

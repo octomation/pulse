@@ -23,7 +23,7 @@
 <main class="flow-stage" id="flow-stage">
   {{- range $i, $c := .Flow}}
   <article class="flow-card" data-repo="{{.Key}}" data-name="{{.Repo}}" data-place="{{$i}}"{{if $i}} hidden{{end}}>
-    <p class="kicker">{{if .Language}}{{.Language}} <i>·</i> {{end}}{{among (len .Lists)}}</p>
+    <p class="kicker">{{.Language}}{{if and .Language (gt (len .Lists) 1)}} <i>·</i> {{end}}{{among (len .Lists)}}</p>
     <h2 class="card-name"><a href="{{.Repo.URL}}" data-action="read" rel="noopener noreferrer"><span class="owner">{{.Repo.Owner}}</span><span class="slash">/</span><span class="name">{{.Repo.Name}}</span></a></h2>
     {{- if .Description}}
     <p class="description" data-action="read">{{.Description}}</p>

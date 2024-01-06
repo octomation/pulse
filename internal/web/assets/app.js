@@ -1,6 +1,6 @@
-// The page of pulse: the buttons call the API, a card leaves the paper only
-// after the service said that its mark is on disk, and a click on a
-// repository opens it in the reader. Opening the reader marks nothing.
+// The page of pulse: a click on a repository opens it in the reader, whose
+// buttons call the API; a card leaves the paper only after the service said
+// that its mark is on disk. Opening the reader marks nothing.
 (function () {
   'use strict';
 
@@ -106,8 +106,8 @@
     });
   }
 
-  // mark sends "Interesting" or "Skip" from a card or from the reader. The
-  // card leaves the paper; in the hidden view it moves to the hidden ones,
+  // mark sends "Interesting" or "Skip" from the reader. The card leaves the
+  // paper; in the hidden view it moves to the hidden ones,
   // as the service renders it now. The reader moves to the next repository.
   function mark(holder, action) {
     var key = holder.dataset.repo;

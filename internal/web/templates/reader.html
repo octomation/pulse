@@ -1,6 +1,7 @@
 {{- define "story"}}
 <div class="story is-{{.State}}" data-repo="{{.Key}}" data-state="{{.State}}" data-name="{{.Repo}}">
-  <p class="kicker">{{with .Details}}{{if .Language}}{{.Language}}{{end}}{{else}}{{.Language}}{{end}}{{if .Lists}} <i>·</i> {{among (len .Lists)}}{{end}}</p>
+  {{- $language := .Language}}{{with .Details}}{{if .Language}}{{$language = .Language}}{{end}}{{end}}
+  <p class="kicker">{{$language}}{{if and $language (gt (len .Lists) 1)}} <i>·</i> {{end}}{{among (len .Lists)}}</p>
   <h2 class="story-name"><span class="owner">{{.Repo.Owner}}</span><span class="slash">/</span><span class="name">{{.Repo.Name}}</span></h2>
   {{- $description := .Description}}{{with .Details}}{{if .Description}}{{$description = .Description}}{{end}}{{end}}
   {{- if $description}}

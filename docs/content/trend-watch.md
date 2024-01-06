@@ -159,25 +159,33 @@ The page reads like a morning paper:
   **Refresh** and **Mark all shown as seen**.
 - Below it are the six lists, each with the time of its last successful load
   and the number of its repositories, and the state of the vault filter.
-- **Front page** holds the repositories that are in most lists at once, the
-  first of them as the lead story. **Today**, **This week** and **This
-  month** hold the others, each in the section of its shortest period.
+- **Front page** holds the repositories that are in most lists at once: the
+  first of them is the lead story across two columns, the next two stand
+  beside it. **Today**, **This week** and **This month** hold the others,
+  each in the section of its shortest period. On a [past day](#past-days)
+  they are **That day**, **That week** and **That month**.
 
-A repository is one card, whatever number of lists it is in; `owner/name` is
-compared without case. The card shows its language, its description and one
-label per list with its position there: `trendshift daily #8`,
-`github daily #6`.
+The cards stand in three columns from the front page to the last section,
+two on a narrow screen and one on a phone. A repository is one card, whatever
+number of lists it is in; `owner/name` is compared without case. The card
+shows its language, how many lists it is in when there are several, its
+description in up to three lines (five on the lead), and one label per list
+with its position there: `trendshift daily #8`, `github daily #6`.
+
+A card is for reading: click its name or its description to open the
+[reader](#the-reader), which has the answers and the whole description, or
+go through the cards one at a time in [flow mode](#flow-mode).
 
 | Action | What it does |
 | --- | --- |
-| **Interesting** | Bookmarks the repository, with the comment you typed in the field above it (optional, up to 500 characters), and hides it for good |
+| **Interesting** | Bookmarks the repository, with the comment you typed in the field beside it (optional, up to 500 characters), and hides it for good |
 | **Skip** | Marks the repository as seen and hides it for three months |
 | **Mark all shown as seen** | Marks every repository the page shows at that moment as seen, for three months |
 
 Only these three actions mark a repository: opening the page, the reader,
 **Show hidden**, **Flow**, **Refresh** and an export mark nothing. A card
 leaves the page once its mark is written to disk; if it cannot be written,
-the card stays and shows the error.
+the reader stays on the repository and shows the error.
 
 A seen mark is a snooze. When the three months are over and the repository
 trends again, it is back on the page and you decide anew; a new **Skip**
@@ -195,8 +203,8 @@ leaving the page. The reader opens beside the paper and shows:
 - its topics, its lists, and links to github.com and to its homepage;
 - the README as GitHub renders it. Its links open in a new tab.
 
-The reader has the same comment field, **Interesting** and **Skip** as the
-card; after either it moves to the next repository. **Next** and
+The reader has the comment field, **Interesting** and **Skip**; after
+either it moves to the next repository. **Next** and
 **Previous**, or `j` and `k`, move between repositories, and `Esc` closes
 the reader.
 
@@ -240,9 +248,9 @@ the reasons it is hidden. It is a page of its own,
 | `Bookmarked in pulse:` and the comment, or `Bookmarked in pulse, without a comment` | It has a pulse bookmark |
 | `In the vault: cobra.md` | The named note of your bookmarks directory names it |
 
-A hidden card keeps its comment field. **Interesting** bookmarks a repository
-you had only marked as seen or keep in your notes, and **Save comment**
-replaces the comment of a bookmark.
+The reader of a hidden repository keeps its comment field. **Interesting**
+bookmarks a repository you had only marked as seen or keep in your notes,
+and **Save comment** replaces the comment of a bookmark.
 
 ### Past days
 
