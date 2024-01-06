@@ -1,6 +1,6 @@
 ---
 title: Trend watch
-description: One local page at http://pulse.localhost:17842/ with the trending GitHub repositories you have not seen or bookmarked, a reader for each of them, and pulsectl bookmarks to export the ones you marked as interesting.
+description: One local page at http://pulse.localhost:17842/ with the trending GitHub repositories you have not seen or bookmarked, a reader for each of them, a calendar of past days, and pulsectl bookmarks to export the ones you marked as interesting.
 ---
 
 # Trend watch
@@ -154,8 +154,9 @@ pulse --listen 127.0.0.1:8080
 
 The page reads like a morning paper:
 
-- The masthead has the date, the counts, as in `54 new · 30 hidden`, and
-  **Show hidden**, **Refresh** and **Mark all shown as seen**.
+- The masthead has the date, which opens the [calendar](#past-days), the
+  counts, as in `54 new · 30 hidden`, and **Show hidden**, **Refresh** and
+  **Mark all shown as seen**.
 - Below it are the six lists, each with the time of its last successful load
   and the number of its repositories, and the state of the vault filter.
 - **Front page** holds the repositories that are in most lists at once, the
@@ -228,7 +229,8 @@ lists know, with the actions.
 ### Hidden repositories
 
 **Show hidden** adds the hidden repositories below the new ones, each with
-the reasons it is hidden:
+the reasons it is hidden. It is a page of its own,
+`http://pulse.localhost:17842/hidden/`; the switch moves between the two.
 
 | Reason on the card | Meaning |
 | --- | --- |
@@ -241,6 +243,35 @@ the reasons it is hidden:
 A hidden card keeps its comment field. **Interesting** bookmarks a repository
 you had only marked as seen or keep in your notes, and **Save comment**
 replaces the comment of a bookmark.
+
+### Past days
+
+pulse keeps every load of the lists, so you can go back to a morning you
+skipped. Click the date in the masthead to open the calendar: the days with
+snapshots are links, the others are not. The arrows beside the date step to
+the previous and the next day that has snapshots.
+
+| Address | What it shows |
+| --- | --- |
+| `http://pulse.localhost:17842/` | Today |
+| `http://pulse.localhost:17842/days/2026-11-19/` | The lists as they stood on November 19, 2026 |
+| `http://pulse.localhost:17842/days/2026-11-19/hidden/` | The same day with the hidden repositories |
+
+A day is a calendar day in the time zone of your computer. The page of a past
+day shows the last successful load of each list that day; a list that did not
+load that day is marked `no snapshot that day`.
+
+A past day is not a restored state: what is hidden is decided by what you
+have done since. A repository you skipped or bookmarked today, or added to
+your notes, is hidden on yesterday's page too, and a skip whose three months
+are over shows it again there. **Interesting**, **Skip** and **Mark all shown
+as seen** work on a past day and mark what that page shows; the mark keeps
+the lists the repository was in on that day. A past day loads nothing from
+the network, so it has no **Refresh**.
+
+A date pulse has no snapshots for, or one that is not written as
+`YYYY-MM-DD`, answers `404` with a link to today. The page of today's date is
+today's page.
 
 ### Loading and errors
 
@@ -317,6 +348,8 @@ when it is not there, and the bookmarks directory is only read.
   counts: use **Refresh** to load sooner.
 - A seen mark cannot be taken back or extended; one period applies to every
   repository.
+- The loads of the lists are kept without expiry. The calendar shows whole
+  days: not a single load within a day, and no day before the first load.
 - A bookmark cannot be deleted from the page; only its comment can be
   replaced.
 - The six lists are fixed. A renamed or transferred repository is a new one.

@@ -20,6 +20,22 @@ import (
 // page is what the template renders.
 type page struct {
 	Now time.Time
+	// Date is the day of the page: today, or the past day it shows.
+	Date time.Time
+	// Today says that the page is today's: it loads the lists and offers
+	// Refresh.
+	Today bool
+	// Day is the date of the page, YYYY-MM-DD, today's included: the marks
+	// of the page are made on the page as it stood on that date.
+	Day string
+	// Base is the path of the day: / for today, /days/YYYY-MM-DD/ for a day
+	// of the calendar.
+	Base string
+	// Prev and Next are the paths of the days with snapshots around this
+	// one, in the same mode; empty when there is none.
+	Prev, Next string
+	// Calendar lays out the days that have snapshots, newest month first.
+	Calendar []month
 	// ShowHidden says that the hidden cards are on the page too.
 	ShowHidden bool
 	Shown      []card
@@ -33,6 +49,87 @@ type page struct {
 	Sources     []hide.Status
 	Problem     string
 	Empty       empty
+}
+
+// month is a month of the calendar: weeks from Monday, with blanks around
+// the days of the month.
+type month struct {
+	Title string
+	Weeks [][]calendarDay
+}
+
+// calendarDay is a cell of the calendar.
+type calendarDay struct {
+	// Number is the day of the month; zero is a blank cell.
+	Number int
+	// Href is the path of the day when it has snapshots.
+	Href string
+	// Current says that the page shows this day; Today that it is today.
+	Current, Today bool
+}
+
+// calendar lays out the months from the first day with snapshots to the
+// month of today, newest first, and links the days that have snapshots.
+// The days are calendar dates of loc: a day whose midnight the clocks skip
+// is a day all the same.
+func calendar(days []time.Time, current, today time.Time, loc *time.Location) []month {
+	if len(days) == 0 {
+		return nil
+	}
+	date := func(t time.Time) string { return t.In(loc).Format(dateLayout) }
+	has := map[string]bool{}
+	for _, day := range days {
+		has[date(day)] = true
+	}
+	firstYear, firstMonth, _ := days[0].In(loc).Date()
+	lastYear, lastMonth, _ := today.In(loc).Date()
+	if end := days[len(days)-1]; end.After(today) {
+		lastYear, lastMonth, _ = end.In(loc).Date()
+	}
+	var months []month
+	for at := time.Date(lastYear, lastMonth, 1, 12, 0, 0, 0, time.UTC); !at.Before(time.Date(firstYear, firstMonth, 1, 12, 0, 0, 0, time.UTC)); at = at.AddDate(0, -1, 0) {
+		m := month{Title: at.Format("January 2006")}
+		week := make([]calendarDay, (int(at.Weekday())+6)%7)
+		for d := at; d.Month() == at.Month(); d = d.AddDate(0, 0, 1) {
+			key := d.Format(dateLayout)
+			cell := calendarDay{Number: d.Day(), Current: key == date(current), Today: key == date(today)}
+			if has[key] {
+				cell.Href = "/days/" + key + "/"
+			}
+			week = append(week, cell)
+			if len(week) == 7 {
+				m.Weeks = append(m.Weeks, week)
+				week = nil
+			}
+		}
+		if len(week) > 0 {
+			week = append(week, make([]calendarDay, 7-len(week))...)
+			m.Weeks = append(m.Weeks, week)
+		}
+		months = append(months, m)
+	}
+	return months
+}
+
+// dateLayout is how a path writes a day.
+const dateLayout = "2006-01-02"
+
+// dayPath is the path of a day of the calendar that starts at day in loc.
+func dayPath(day time.Time, loc *time.Location) string {
+	return "/days/" + day.In(loc).Format(dateLayout) + "/"
+}
+
+// around returns the days with snapshots right before and after current.
+func around(days []time.Time, current time.Time) (prev, next time.Time) {
+	for _, day := range days {
+		switch {
+		case day.Before(current):
+			prev = day
+		case day.After(current) && next.IsZero():
+			next = day
+		}
+	}
+	return prev, next
 }
 
 // empty is what the page says in place of the new repositories when there
@@ -143,8 +240,11 @@ func (c card) Comment() string {
 
 func newPage(view watch.View, showHidden bool) page {
 	p := page{
-		Now: view.Now, ShowHidden: showHidden,
+		Now: view.Now, Date: view.Now, Today: !view.Past(), Base: "/", ShowHidden: showHidden,
 		Lists: view.Lists, Sources: view.Sources, Problem: view.Problem,
+	}
+	if view.Past() {
+		p.Date = view.Day
 	}
 	for _, c := range view.Cards {
 		switch {
@@ -156,7 +256,6 @@ func newPage(view watch.View, showHidden bool) page {
 	}
 	p.HiddenCount = view.HiddenCount()
 	p.Sections = layout(p.Shown)
-
 	p.Empty = emptyOf(view)
 	return p
 }
@@ -170,7 +269,9 @@ func capital(s string) string {
 
 // emptyOf says what the page shows when no repository is new: "Nothing new"
 // without reservations only when no list is in error, every source that
-// hides cards answered, and the state of the lists is recorded.
+// hides cards answered, and the state of the lists is recorded. A list
+// without a snapshot on a past day is not an error: the page names the lists
+// that had one.
 func emptyOf(view watch.View) empty {
 	total := len(view.Lists)
 	unchecked := view.FailedSources()
@@ -203,6 +304,22 @@ func emptyOf(view watch.View) empty {
 			Title: "No new repositories, but " + strings.Join(names, " and ") + " could not be read",
 			Text: "Every repository of the lists is seen or bookmarked, but the list may include what is already in " +
 				strings.Join(names, " and ") + ". The reason is above.",
+		}
+	case !view.AsOf.IsZero():
+		// The loads of that day are not known: no claim on the whole
+		// picture.
+		return empty{
+			Kind:  "over",
+			Title: "No new repositories left on this page",
+			Text: "The day of this page is over, so it shows the lists as they stood then, not whether they all loaded. " +
+				"Reload it to see today.",
+		}
+	case view.Past() && view.LoadedLists() < total:
+		return empty{
+			Kind:  "clear",
+			Title: "Nothing new on this day",
+			Text: "Every repository of the " + plural(view.LoadedLists(), "list", "lists") +
+				" that had a snapshot that day is seen or already in your bookmarks.",
 		}
 	case view.Problem != "":
 		return empty{
@@ -260,6 +377,8 @@ func (h *handler) funcs() template.FuncMap {
 			return path
 		},
 		"capital": capital,
+		// iso is the date of a datetime attribute, in the zone of the page.
+		"iso": func(t time.Time) string { return local(t).Format(dateLayout) },
 		// month is a date to the month.
 		"month": func(t time.Time) string { return local(t).Format("January 2006") },
 		// date is a date without the time.

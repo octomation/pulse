@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"slices"
 	"strings"
 	"time"
 
@@ -24,7 +25,8 @@ import (
 	"go.octolab.org/toolset/pulse/internal/watch"
 )
 
-//go:embed templates/page.html templates/reader.html assets/app.css assets/app.js assets/favicon.svg
+//go:embed templates/page.html templates/reader.html templates/missing.html
+//go:embed assets/app.css assets/app.js assets/favicon.svg
 var files embed.FS
 
 // MaxBodyBytes limits the body of a request.
@@ -52,7 +54,8 @@ type Options struct {
 	// Details asks GitHub about a repository for the reader; nil leaves the
 	// reader with what the lists know.
 	Details Details
-	// Location is the time zone of the times on the page; nil is local.
+	// Location is the time zone of the times on the page and of the days of
+	// the calendar; nil is local.
 	Location *time.Location
 	// Home is the home directory, which the page writes as ~; empty writes
 	// paths in full.
@@ -87,9 +90,13 @@ func NewHandler(o Options) (http.Handler, error) {
 	}
 	h.page = page
 
-	h.mux.HandleFunc("GET /{$}", h.index)
+	h.mux.HandleFunc("GET /{$}", h.index(modePage))
+	h.mux.HandleFunc("GET /hidden/{$}", h.index(modeHidden))
+	h.mux.HandleFunc("GET /days/{date}/{$}", h.index(modePage))
+	h.mux.HandleFunc("GET /days/{date}/hidden/{$}", h.index(modeHidden))
 	h.mux.HandleFunc("GET /assets/{name}", h.asset)
 	h.mux.HandleFunc("GET /repos/{owner}/{name}", h.story)
+	h.mux.HandleFunc("GET /days/{date}/repos/{owner}/{name}", h.story)
 	h.mux.HandleFunc("GET /repos/{owner}/{name}/readme", h.readme)
 	h.mux.HandleFunc("GET /api/bookmarks", h.bookmarks)
 	h.mux.HandleFunc("POST /api/marks", h.mark)
@@ -158,19 +165,146 @@ func sameOrigin(origin, host string) bool {
 	return err == nil && u.Scheme == "http" && strings.EqualFold(u.Host, host)
 }
 
-// index serves the page. It loads the lists that are due and marks nothing.
-func (h *handler) index(w http.ResponseWriter, r *http.Request) {
-	view, err := h.Service.Open(h.Context)
-	if err != nil {
-		http.Error(w, "pulse is stopping: "+err.Error(), http.StatusServiceUnavailable)
-		return
+// The modes of a page.
+const (
+	modePage   = ""
+	modeHidden = "hidden/"
+)
+
+// place is the day a page shows: today, or a past day with snapshots.
+type place struct {
+	// Day is the date as the path writes it; empty for today, also when the
+	// path names today's date.
+	Day string
+	// Base is the path of the day: / or /days/YYYY-MM-DD/.
+	Base string
+	// From and To bound a past day.
+	From, To time.Time
+}
+
+// today reports whether the place is today.
+func (p place) today() bool { return p.Day == "" }
+
+// scope is the day the marks of the place are made on.
+func (p place) scope() watch.Scope { return watch.Scope{From: p.From, To: p.To} }
+
+// placeOfPage reads the page an action comes from: its date and whether it
+// was today's page, which shows the latest snapshot of each list. A today's
+// page left open past midnight keeps what it showed: the latest snapshots
+// before the end of its date, whatever day they were taken.
+func (h *handler) placeOfPage(date string, latest bool) (place, bool) {
+	if !latest || date == "" {
+		return h.placeOf(date)
 	}
+	parsed, err := time.Parse(dateLayout, date)
+	if err != nil || parsed.Format(dateLayout) != date {
+		return place{}, false
+	}
+	today := h.Service.Now().In(h.Location).Format(dateLayout)
+	switch {
+	case date == today:
+		return place{Base: "/"}, true
+	case date > today:
+		return place{}, false
+	}
+	day := watch.DayStart(parsed.Year(), parsed.Month(), parsed.Day(), h.Location)
+	return place{Base: "/days/" + date + "/", Day: date, To: watch.NextDay(day, h.Location)}, true
+}
+
+// placeOf reads the date of a path: empty is today, and so is today's date;
+// any other date has to be a day with snapshots. The days are calendar dates
+// in the zone of the handler.
+func (h *handler) placeOf(date string) (place, bool) {
+	if date == "" {
+		return place{Base: "/"}, true
+	}
+	parsed, err := time.Parse(dateLayout, date)
+	if err != nil || parsed.Format(dateLayout) != date {
+		return place{}, false
+	}
+	day := watch.DayStart(parsed.Year(), parsed.Month(), parsed.Day(), h.Location)
+	p := place{Base: "/days/" + date + "/"}
+	if date == h.Service.Now().In(h.Location).Format(dateLayout) {
+		return p, true
+	}
+	known := func(d time.Time) bool { return d.In(h.Location).Format(dateLayout) == date }
+	if !slices.ContainsFunc(h.Service.Days(h.Location), known) {
+		return place{}, false
+	}
+	p.Day, p.From, p.To = date, day, watch.NextDay(day, h.Location)
+	return p, true
+}
+
+// viewOf builds the view of a place. Today's page loads the lists that are
+// due when load is set; a past day loads nothing.
+func (h *handler) viewOf(ctx context.Context, p place, load bool) (watch.View, error) {
+	switch {
+	case !p.today():
+		return h.Service.Day(ctx, p.From, p.To)
+	case load:
+		return h.Service.Open(h.Context)
+	default:
+		return h.Service.View(ctx), nil
+	}
+}
+
+// index serves a page of a day in a mode: the paper, or the paper with the
+// hidden cards. Today's page loads the lists that are due; no
+// page marks anything, and none takes a query parameter.
+func (h *handler) index(mode string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		at, found := h.placeOf(r.PathValue("date"))
+		if !found {
+			h.missing(w, r)
+			return
+		}
+		view, err := h.viewOf(r.Context(), at, true)
+		if err != nil {
+			if !at.today() {
+				http.Error(w, "the snapshots of the day could not be read: "+err.Error(), http.StatusInternalServerError)
+				return
+			}
+			http.Error(w, "pulse is stopping: "+err.Error(), http.StatusServiceUnavailable)
+			return
+		}
+		p := newPage(view, mode == modeHidden)
+		// The page names its date, today's too, so that its marks stay on
+		// the day it showed when they are made after midnight.
+		p.Day, p.Base = p.Date.In(h.Location).Format(dateLayout), at.Base
+		today := watch.StartOfDay(view.Now, h.Location)
+		current := today
+		if view.Past() {
+			current = view.Day
+		}
+		days := h.Service.Days(h.Location)
+		p.Calendar = calendar(days, current, today, h.Location)
+		prev, next := around(days, current)
+		if !prev.IsZero() {
+			p.Prev = dayPath(prev, h.Location) + mode
+		}
+		if !next.IsZero() {
+			p.Next = dayPath(next, h.Location) + mode
+		}
+		var buffer bytes.Buffer
+		if err := h.page.ExecuteTemplate(&buffer, "page.html", p); err != nil {
+			http.Error(w, "the page could not be rendered: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		_, _ = w.Write(buffer.Bytes())
+	}
+}
+
+// missing answers a path of a day that has no page: a malformed date, or a
+// day without snapshots. It links to today.
+func (h *handler) missing(w http.ResponseWriter, r *http.Request) {
 	var buffer bytes.Buffer
-	if err := h.page.Execute(&buffer, newPage(view, r.URL.Query().Get("hidden") == "1")); err != nil {
-		http.Error(w, "the page could not be rendered: "+err.Error(), http.StatusInternalServerError)
+	if err := h.page.ExecuteTemplate(&buffer, "missing", r.PathValue("date")); err != nil {
+		http.NotFound(w, r)
 		return
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(http.StatusNotFound)
 	_, _ = w.Write(buffer.Bytes())
 }
 
@@ -194,13 +328,23 @@ func (h *handler) asset(w http.ResponseWriter, r *http.Request) {
 // knows. It marks nothing, and a failure of GitHub is a line of the story,
 // not of the answer.
 func (h *handler) story(w http.ResponseWriter, r *http.Request) {
+	at, found := h.placeOf(r.PathValue("date"))
+	if !found {
+		h.missing(w, r)
+		return
+	}
 	repo, err := parseRepo(r.PathValue("owner") + "/" + r.PathValue("name"))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	view, err := h.viewOf(r.Context(), at, false)
+	if err != nil {
+		http.Error(w, "the snapshots of the day could not be read: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
 	s := story{card: card{Card: watch.Card{Repo: repo}, State: "shown"}}
-	if c, found := h.Service.View(r.Context()).Card(repo.Key()); found {
+	if c, found := view.Card(repo.Key()); found {
 		// GitHub is asked for the name as the lists write it.
 		s.card, s.Known, repo = newCard(c), true, c.Repo
 	}
@@ -283,6 +427,11 @@ func (h *handler) mark(w http.ResponseWriter, r *http.Request) {
 		Action  store.Action `json:"action"`
 		Repo    string       `json:"repo"`
 		Comment string       `json:"comment"`
+		// Day is the date of the page, YYYY-MM-DD; empty is today.
+		Day string `json:"day"`
+		// Latest says that the page was today's: it showed the latest
+		// snapshot of each list as of its date.
+		Latest bool `json:"latest"`
 	}
 	if !readJSON(w, r, &request) {
 		return
@@ -292,8 +441,13 @@ func (h *handler) mark(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
+	at, found := h.placeOfPage(request.Day, request.Latest)
+	if !found {
+		writeError(w, http.StatusBadRequest, fmt.Sprintf("day %q: want the date of a day with snapshots", request.Day))
+		return
+	}
 	comment := strings.Join(strings.Fields(request.Comment), " ")
-	if err := h.Service.Mark(request.Action, repo, comment); err != nil {
+	if err := h.Service.Mark(request.Action, repo, comment, at.scope()); err != nil {
 		if errors.Is(err, watch.ErrInvalid) {
 			writeError(w, http.StatusBadRequest, err.Error())
 			return
@@ -302,7 +456,12 @@ func (h *handler) mark(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	view := h.Service.View(r.Context())
+	view, err := h.viewOf(r.Context(), at, false)
+	if err != nil {
+		// The mark is on disk: the answer says so, and the page loads again.
+		writeJSON(w, http.StatusOK, counts{Problem: "the mark is written, but the day could not be read: " + err.Error(), Reload: true})
+		return
+	}
 	answer := h.countsOf(view)
 	if card, found := view.Card(repo.Key()); found {
 		answer.Card = h.fragment("card", newCard(card))
@@ -314,8 +473,16 @@ func (h *handler) mark(w http.ResponseWriter, r *http.Request) {
 func (h *handler) seen(w http.ResponseWriter, r *http.Request) {
 	var request struct {
 		Repos []string `json:"repos"`
+		// Day and Latest name the page, as for a mark.
+		Day    string `json:"day"`
+		Latest bool   `json:"latest"`
 	}
 	if !readJSON(w, r, &request) {
+		return
+	}
+	at, found := h.placeOfPage(request.Day, request.Latest)
+	if !found {
+		writeError(w, http.StatusBadRequest, fmt.Sprintf("day %q: want the date of a day with snapshots", request.Day))
 		return
 	}
 	if len(request.Repos) > MaxRepos {
@@ -331,12 +498,17 @@ func (h *handler) seen(w http.ResponseWriter, r *http.Request) {
 		}
 		repos = append(repos, repo)
 	}
-	marked, err := h.Service.MarkSeen(repos)
+	marked, err := h.Service.MarkSeen(repos, at.scope())
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "the marks could not be written: "+err.Error())
 		return
 	}
-	answer := h.countsOf(h.Service.View(r.Context()))
+	view, err := h.viewOf(r.Context(), at, false)
+	if err != nil {
+		writeJSON(w, http.StatusOK, counts{Marked: &marked, Problem: "the marks are written, but the day could not be read: " + err.Error(), Reload: true})
+		return
+	}
+	answer := h.countsOf(view)
 	answer.Marked = &marked
 	writeJSON(w, http.StatusOK, answer)
 }
@@ -421,8 +593,11 @@ type counts struct {
 	// Failed and Loaded count the lists after a refresh.
 	Failed *int `json:"failed,omitempty"`
 	Loaded *int `json:"loaded,omitempty"`
-	// Problem says what a refresh could not record, as the page does.
+	// Problem says what a refresh could not record, as the page does, or
+	// what could not be read after a mark was written.
 	Problem string `json:"problem,omitempty"`
+	// Reload says that the page has to load again to show the outcome.
+	Reload bool `json:"reload,omitempty"`
 }
 
 func (h *handler) countsOf(view watch.View) counts {

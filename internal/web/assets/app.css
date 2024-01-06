@@ -254,6 +254,33 @@ kbd { font: 600 11px/1 var(--sans); border: 1px solid var(--rule); border-radius
 }
 .card.is-lead .actions { margin-top: 26px; max-width: 520px; }
 
-/* The sources that hide cards */
+/* The day of the paper and the calendar of the days with snapshots */
+.day-nav { display: inline-flex; align-items: baseline; gap: 8px; position: relative; }
+.day-step { text-decoration: none; font-size: 15px; line-height: 1; padding: 0 4px; color: var(--ink); }
+.day-step.is-off { color: var(--rule); }
+.calendar summary { cursor: pointer; list-style: none; text-decoration: underline dotted; text-underline-offset: 3px; }
+.calendar summary::-webkit-details-marker { display: none; }
+.calendar[open] summary { color: var(--ink); }
+.calendar-sheet {
+  position: absolute; z-index: 5; top: calc(100% + 8px); left: 0;
+  max-height: 60vh; overflow-y: auto; padding: 10px 14px 12px;
+  background: var(--sheet); border: 1px solid var(--heavy); box-shadow: 0 12px 30px rgb(0 0 0 / .18);
+  text-transform: none; letter-spacing: 0; font: 12px/1.4 var(--sans); text-align: left;
+}
+.calendar-today, .calendar-empty { margin: 0 0 8px; }
+.month { border-collapse: collapse; margin: 0 0 10px; }
+.month caption { text-align: left; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; font-size: 10.5px; padding: 4px 0; color: var(--ink); }
+.month th { font-weight: 600; color: var(--faint); font-size: 10px; padding: 2px 0; width: 30px; }
+.month td { text-align: center; padding: 1px; height: 26px; color: var(--faint); }
+.month td a { display: block; padding: 4px 0; color: var(--ink); font-weight: 700; text-decoration: none; border-radius: 2px; }
+.month td a:hover { background: var(--tint); }
+.month td.is-current a, .month td.is-current span { background: var(--ink); color: var(--paper); border-radius: 2px; display: block; padding: 4px 0; }
+.month td.is-today { outline: 1px solid var(--rule); }
+.list-state[data-missing] { font-style: italic; }
 .vault.is-warning { color: var(--accent); }
 .origin { font-style: normal; font-family: var(--sans); font-size: 12.5px; }
+a.button { display: inline-block; text-decoration: none; }
+
+@media (max-width: 520px) {
+  .calendar-sheet { left: -8px; }
+}

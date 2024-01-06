@@ -118,7 +118,7 @@ func TestMarks(t *testing.T) {
 	loads := f.loader.Total()
 
 	t.Run("a mark takes the name and the lists of the view", func(t *testing.T) {
-		require.NoError(t, f.service.Mark(store.Interesting, trend.Repo{Owner: "OWNER", Name: "NAME"}, "why"))
+		require.NoError(t, f.service.Mark(store.Interesting, trend.Repo{Owner: "OWNER", Name: "NAME"}, "why", Scope{}))
 		assert.Equal(t, []store.Mark{{
 			Time: morning, Repo: trend.Repo{Owner: "OWNER", Name: "NAME"}, Action: store.Interesting, Comment: "why",
 			Lists: []string{"trendshift/daily", "github/daily"},
@@ -133,23 +133,23 @@ func TestMarks(t *testing.T) {
 	})
 
 	t.Run("a skip keeps no comment", func(t *testing.T) {
-		require.NoError(t, f.service.Mark(store.Skip, trend.Repo{Owner: "other", Name: "repo"}, "not for me"))
+		require.NoError(t, f.service.Mark(store.Skip, trend.Repo{Owner: "other", Name: "repo"}, "not for me", Scope{}))
 		marks := f.store.Marks()
 		assert.Empty(t, marks[len(marks)-1].Comment)
 	})
 
 	t.Run("a repository that left the lists can still be marked", func(t *testing.T) {
-		require.NoError(t, f.service.Mark(store.Interesting, trend.Repo{Owner: "gone", Name: "away"}, ""))
+		require.NoError(t, f.service.Mark(store.Interesting, trend.Repo{Owner: "gone", Name: "away"}, "", Scope{}))
 		marks := f.store.Marks()
 		assert.Equal(t, []string{}, marks[len(marks)-1].Lists)
 	})
 
 	t.Run("what is not a mark of a card is refused", func(t *testing.T) {
 		before := len(f.store.Marks())
-		assert.ErrorIs(t, f.service.Mark(store.Seen, trend.Repo{Owner: "a", Name: "b"}, ""), ErrInvalid)
-		assert.ErrorIs(t, f.service.Mark("star", trend.Repo{Owner: "a", Name: "b"}, ""), ErrInvalid)
-		assert.ErrorIs(t, f.service.Mark(store.Interesting, trend.Repo{Owner: "a", Name: "b"}, strings.Repeat("x", MaxComment+1)), ErrInvalid)
-		assert.Error(t, f.service.Mark(store.Skip, trend.Repo{Owner: "a"}, ""))
+		assert.ErrorIs(t, f.service.Mark(store.Seen, trend.Repo{Owner: "a", Name: "b"}, "", Scope{}), ErrInvalid)
+		assert.ErrorIs(t, f.service.Mark("star", trend.Repo{Owner: "a", Name: "b"}, "", Scope{}), ErrInvalid)
+		assert.ErrorIs(t, f.service.Mark(store.Interesting, trend.Repo{Owner: "a", Name: "b"}, strings.Repeat("x", MaxComment+1), Scope{}), ErrInvalid)
+		assert.Error(t, f.service.Mark(store.Skip, trend.Repo{Owner: "a"}, "", Scope{}))
 		assert.Len(t, f.store.Marks(), before)
 	})
 
@@ -160,7 +160,7 @@ func TestMarks(t *testing.T) {
 			{Owner: "owner", Name: "trendshift-weekly"}, // new
 			{Owner: "Owner", Name: "Trendshift-Weekly"}, // the same one
 			{Owner: "owner", Name: "github-weekly"},     // new
-		})
+		}, Scope{})
 		require.NoError(t, err)
 		assert.Equal(t, 2, marked)
 		marks := f.store.Marks()
@@ -170,7 +170,7 @@ func TestMarks(t *testing.T) {
 			Lists: []string{"trendshift/weekly"},
 		}, marks[before])
 
-		marked, err = f.service.MarkSeen(nil)
+		marked, err = f.service.MarkSeen(nil, Scope{})
 		require.NoError(t, err)
 		assert.Zero(t, marked)
 	})

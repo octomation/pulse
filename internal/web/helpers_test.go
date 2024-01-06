@@ -3,6 +3,7 @@ package web_test
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"html"
 	"net/http"
 	"net/http/httptest"
@@ -17,6 +18,7 @@ import (
 	"go.octolab.org/toolset/pulse/internal/config"
 	"go.octolab.org/toolset/pulse/internal/hide"
 	"go.octolab.org/toolset/pulse/internal/store"
+	"go.octolab.org/toolset/pulse/internal/trend"
 	"go.octolab.org/toolset/pulse/internal/vault"
 	"go.octolab.org/toolset/pulse/internal/watch"
 	"go.octolab.org/toolset/pulse/internal/watch/watchtest"
@@ -45,8 +47,7 @@ type service struct {
 	obsidian string
 	// snooze is how long a skip hides; zero is the default.
 	snooze config.Period
-	// location is the time zone of the calendar the snooze is counted in;
-	// nil is UTC.
+	// location is the time zone of the days; nil is UTC.
 	location *time.Location
 	// hide replaces the vault of the directory; nil keeps it.
 	hide hide.Facade
@@ -98,7 +99,7 @@ func (s *service) restart() {
 	s.store, s.handler = state, handler
 }
 
-// zone is the time zone of the calendar the snooze is counted in.
+// zone is the time zone of the days of the calendar.
 func (s *service) zone() *time.Location {
 	if s.location == nil {
 		return time.UTC
@@ -144,10 +145,61 @@ func (s *service) mark(action, repo, comment string) *httptest.ResponseRecorder 
 }
 
 // seenAll clicks "Mark all shown as seen" on a rendered page: it sends
-// exactly the cards the page shows.
+// exactly the cards the page shows, and the day of a past day.
 func (s *service) seenAll(p page) *httptest.ResponseRecorder {
 	s.t.Helper()
-	return s.post("/api/seen", map[string][]string{"repos": p.names("shown")})
+	body := map[string]any{"repos": p.names("shown")}
+	if day := p.day(); day != "" {
+		body["day"] = day
+	}
+	if strings.Contains(p.html, `data-latest="true"`) {
+		body["latest"] = true
+	}
+	return s.post("/api/seen", body)
+}
+
+// markOn clicks "Interesting" or "Skip" on a card of a past day.
+func (s *service) markOn(day, action, repo, comment string) *httptest.ResponseRecorder {
+	s.t.Helper()
+	return s.post("/api/marks", map[string]string{"action": action, "repo": repo, "comment": comment, "day": day})
+}
+
+// loadAt makes the lists answer with the repositories, given as owner/name,
+// fails the lists the map does not have, and loads all of them at the time.
+func (s *service) loadAt(at time.Time, lists map[trend.List][]string) {
+	s.t.Helper()
+	for _, list := range trend.Lists() {
+		if names, found := lists[list]; found {
+			s.loader.Set(list, watchtest.Entries(s.t, names...)...)
+		} else {
+			s.loader.Fail(list, errors.New("no answer on this day"))
+		}
+	}
+	s.clock.Set(at)
+	response := s.post("/api/refresh", struct{}{})
+	require.Equal(s.t, http.StatusOK, response.Code, response.Body.String())
+}
+
+var dayPattern = regexp.MustCompile(`<body [^>]*data-day="([^"]*)"`)
+
+// day returns the past day of the page, empty for today.
+func (p page) day() string {
+	if match := dayPattern.FindStringSubmatch(p.html); match != nil {
+		return match[1]
+	}
+	return ""
+}
+
+var calendarPattern = regexp.MustCompile(`<a href="(/days/[^"]+/)" data-calendar-day>`)
+
+// calendar returns the paths the calendar links: the newest month first,
+// the days of a month in their order.
+func (p page) calendar() []string {
+	var paths []string
+	for _, match := range calendarPattern.FindAllStringSubmatch(p.html, -1) {
+		paths = append(paths, match[1])
+	}
+	return paths
 }
 
 // page is what a rendered page shows.

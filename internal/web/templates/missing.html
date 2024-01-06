@@ -1,0 +1,19 @@
+{{- define "missing"}}<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>No such day · pulse</title>
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/assets/app.css">
+</head>
+<body>
+<section class="empty is-missing" data-empty="missing">
+  <h2>No page for {{if .}}“{{.}}”{{else}}this day{{end}}</h2>
+  <p>pulse has a page for today and for every day that has snapshots of the lists; a day is written as YYYY-MM-DD.</p>
+  <p><a class="button primary" href="/">Go to today</a></p>
+</section>
+</body>
+</html>
+{{- end}}

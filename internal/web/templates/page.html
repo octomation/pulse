@@ -9,18 +9,48 @@
 <link rel="stylesheet" href="/assets/app.css">
 <script src="/assets/app.js" defer></script>
 </head>
-<body data-view="{{if .ShowHidden}}hidden{{else}}new{{end}}">
+<body data-view="{{if .ShowHidden}}hidden{{else}}new{{end}}" data-base="{{.Base}}" data-day="{{.Day}}"{{if .Today}} data-latest="true"{{end}}>
 
 <header class="masthead">
   <div class="dateline">
-    <span>{{day .Now}}</span>
+    <span class="day-nav">
+      {{- if .Prev}}<a class="day-step" data-day-step="prev" href="{{.Prev}}" title="The previous day with snapshots" aria-label="Previous day">‹</a>{{else}}<span class="day-step is-off" aria-hidden="true">‹</span>{{end}}
+      <details class="calendar">
+        <summary data-day-name><time datetime="{{iso .Date}}">{{day .Date}}</time>{{if not .Today}} <i>·</i> past day{{end}}</summary>
+        <div class="calendar-sheet">
+          {{- if not .Today}}
+          <p class="calendar-today"><a href="/">Back to today</a></p>
+          {{- end}}
+          {{- range .Calendar}}
+          <table class="month">
+            <caption>{{.Title}}</caption>
+            <thead><tr><th>Mo</th><th>Tu</th><th>We</th><th>Th</th><th>Fr</th><th>Sa</th><th>Su</th></tr></thead>
+            <tbody>
+              {{- range .Weeks}}
+              <tr>
+                {{- range .}}
+                <td{{if .Current}} class="is-current"{{else if .Today}} class="is-today"{{end}}>{{if .Href}}<a href="{{.Href}}" data-calendar-day>{{.Number}}</a>{{else if .Number}}<span>{{.Number}}</span>{{end}}</td>
+                {{- end}}
+              </tr>
+              {{- end}}
+            </tbody>
+          </table>
+          {{- else}}
+          <p class="calendar-empty">No snapshots yet.</p>
+          {{- end}}
+        </div>
+      </details>
+      {{- if .Next}}<a class="day-step" data-day-step="next" href="{{.Next}}" title="The next day with snapshots" aria-label="Next day">›</a>{{else}}<span class="day-step is-off" aria-hidden="true">›</span>{{end}}
+    </span>
     <span class="counts" aria-live="polite"><b data-count="new">{{len .Shown}}</b> new <i>·</i> <b data-count="hidden">{{.HiddenCount}}</b> hidden</span>
   </div>
   <h1 class="brand"><a href="/">The Pulse</a></h1>
   <p class="motto">trend-watch <i>·</i> only what you have not seen</p>
   <nav class="controls">
-    <a class="switch" role="switch" aria-checked="{{if .ShowHidden}}true{{else}}false{{end}}" data-action="toggle-hidden" href="{{if .ShowHidden}}/{{else}}/?hidden=1{{end}}"><span class="knob" aria-hidden="true"></span>Show hidden</a>
+    <a class="switch" role="switch" aria-checked="{{if .ShowHidden}}true{{else}}false{{end}}" data-action="toggle-hidden" href="{{.Base}}{{if not .ShowHidden}}hidden/{{end}}"><span class="knob" aria-hidden="true"></span>Show hidden</a>
+    {{- if .Today}}
     <button type="button" class="button" data-action="refresh" title="Load all six lists now">Refresh</button>
+    {{- end}}
     <button type="button" class="button primary" data-action="seen-all" title="Mark the repositories shown on this page as seen"{{if not .Shown}} disabled{{end}}>Mark all shown as seen</button>
   </nav>
   <p class="notice" id="notice" role="alert" hidden></p>
@@ -34,8 +64,10 @@
         <span class="list-name">{{title .List}}</span>
         {{- if .Loaded}}
         <span class="list-state"><time datetime="{{stamp .FetchedAt}}" title="{{full .FetchedAt}}">{{short .FetchedAt $.Now}}</time> <i>·</i> {{plural .Count "repository" "repositories"}}</span>
-        {{- else}}
+        {{- else if $.Today}}
         <span class="list-state">no snapshot yet</span>
+        {{- else}}
+        <span class="list-state" data-missing="day">no snapshot that day</span>
         {{- end}}
         {{- if .Failed}}
         <span class="list-error">Failed <time datetime="{{stamp .FailedAt}}" title="{{full .FailedAt}}">{{short .FailedAt $.Now}}</time>: {{.Reason}}{{if .Loaded}}. Showing the snapshot of {{full .FetchedAt}}.{{end}}</span>

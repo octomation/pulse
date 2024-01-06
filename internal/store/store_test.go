@@ -292,3 +292,56 @@ func TestOlderSnapshotDoesNotReplaceTheLatest(t *testing.T) {
 	got, _ = reopened.Latest(daily)
 	assert.Equal(t, newer, got)
 }
+
+// Every snapshot is indexed by its time, across a reopen, and the last one
+// within a span is read from its file.
+func TestSnapshotsOfASpan(t *testing.T) {
+	dir := t.TempDir()
+	s, err := Open(dir)
+	require.NoError(t, err)
+	first := snapshot(daily, morning, "golang/go")
+	evening := snapshot(daily, morning.Add(12*time.Hour), "astral-sh/uv")
+	next := snapshot(daily, morning.Add(24*time.Hour), "denoland/deno")
+	for _, snap := range []trend.Snapshot{evening, first, next, evening} {
+		require.NoError(t, s.SaveSnapshot(snap))
+	}
+	require.NoError(t, os.WriteFile(filepath.Join(dir, SnapshotsDir, "trendshift", "daily", ".tmp-1"), nil, 0o600))
+
+	day := time.Date(2026, time.November, 19, 0, 0, 0, 0, time.UTC)
+	for _, store := range []*Store{s, reopen(t, dir)} {
+		assert.Equal(t, []time.Time{morning, morning.Add(12 * time.Hour), morning.Add(24 * time.Hour)}, store.Times(daily))
+		assert.Empty(t, store.Times(weekly))
+
+		got, found, err := store.LatestIn(daily, day, day.AddDate(0, 0, 1))
+		require.NoError(t, err)
+		require.True(t, found)
+		assert.Equal(t, evening, got, "the last one of the day")
+
+		got, found, err = store.LatestIn(daily, day, morning.Add(12*time.Hour))
+		require.NoError(t, err)
+		require.True(t, found)
+		assert.Equal(t, first, got, "the end is not in the span")
+
+		_, found, err = store.LatestIn(daily, day.AddDate(0, 0, -1), day)
+		require.NoError(t, err)
+		assert.False(t, found)
+		_, found, err = store.LatestIn(weekly, day, day.AddDate(0, 0, 1))
+		require.NoError(t, err)
+		assert.False(t, found)
+	}
+
+	t.Run("a snapshot that cannot be read is an error that names its file", func(t *testing.T) {
+		path := filepath.Join(dir, SnapshotsDir, "trendshift", "daily", morning.Format("2006-01-02T15-04-05.000Z")+".json")
+		require.NoError(t, os.WriteFile(path, []byte("{"), 0o600))
+		_, _, err := s.LatestIn(daily, day, morning.Add(time.Hour))
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), path)
+	})
+}
+
+func reopen(t *testing.T, dir string) *Store {
+	t.Helper()
+	s, err := Open(dir)
+	require.NoError(t, err)
+	return s
+}

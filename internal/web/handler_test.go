@@ -62,7 +62,7 @@ func TestYesterdaySeenTodayTwoNew(t *testing.T) {
 	assert.Equal(t, "8", today.count(t, "hidden"))
 	assert.False(t, today.saysNothingNew())
 
-	hidden := s.open("/?hidden=1")
+	hidden := s.open("/hidden/")
 	assert.Equal(t, []string{"ghostty-org/ghostty", "zed-industries/zed"}, hidden.keys("shown"))
 	assert.Len(t, hidden.keys("hidden"), 8)
 	for _, key := range hidden.keys("hidden") {
@@ -110,7 +110,7 @@ func TestVaultAndMonthOldSeenStayHidden(t *testing.T) {
 	assert.Contains(t, page.html, "Vault: 2 repositories in 5 notes")
 	assert.Contains(t, page.html, "1 note could not be read")
 
-	hidden := s.open("/?hidden=1")
+	hidden := s.open("/hidden/")
 	assert.Equal(t, []string{"anthropics/claude-code"}, hidden.keys("shown"))
 	assert.Equal(t, []string{"snouzy/workout-cool", "tailscale/tailscale", "astral-sh/uv"}, hidden.keys("hidden"))
 
@@ -137,7 +137,7 @@ func TestVaultIsReadForEveryPage(t *testing.T) {
 
 	note = "---\naliases:\n  - golang/go\n---\n"
 	require.NoError(t, os.WriteFile(filepath.Join(vault, "go.md"), []byte(note), 0o600))
-	page := s.open("/?hidden=1")
+	page := s.open("/hidden/")
 	assert.NotContains(t, page.keys("shown"), "golang/go")
 	assert.Equal(t, "In the vault: go.md", page.card(t, "golang/go").reasons["vault"])
 }
@@ -229,7 +229,7 @@ func TestOpeningMarksNothingAndLoadsOnceAnHour(t *testing.T) {
 
 	// Opening the page, the hidden view and the export mark nothing.
 	s.open("/")
-	s.open("/?hidden=1")
+	s.open("/hidden/")
 	require.Equal(t, http.StatusOK, s.get("/api/bookmarks").Code)
 	require.Equal(t, http.StatusOK, s.get("/api/bookmarks?format=jsonl").Code)
 	assert.Equal(t, each(1), calls())
@@ -488,7 +488,7 @@ func TestInterestingCreatesBookmark(t *testing.T) {
 	assert.Equal(t, wantURLs, urls, "the bookmarks survive a restart")
 	assert.Equal(t, wantJSONL, jsonl)
 
-	page := s.open("/?hidden=1")
+	page := s.open("/hidden/")
 	assert.NotContains(t, page.keys("shown"), "ghostty-org/ghostty")
 	card := page.card(t, "ghostty-org/ghostty")
 	assert.Equal(t, "hidden", card.state)
@@ -510,7 +510,7 @@ func TestInterestingCreatesBookmark(t *testing.T) {
 		urls, _ := export()
 		assert.Equal(t, wantURLs, urls, "a skip is not a bookmark")
 
-		card := s.open("/?hidden=1").card(t, "ollama/ollama")
+		card := s.open("/hidden/").card(t, "ollama/ollama")
 		assert.Equal(t, map[string]string{"seen": "Skipped on Nov 18, 2026, until Feb 18, 2027"}, card.reasons)
 		assert.Contains(t, card.html, `data-action="interesting"`)
 		assert.NotContains(t, card.html, `data-action="skip"`)
@@ -696,8 +696,8 @@ func TestPageAndAssets(t *testing.T) {
 	} {
 		assert.Contains(t, body, hook)
 	}
-	assert.Contains(t, body, `aria-checked="false" data-action="toggle-hidden" href="/?hidden=1"`)
-	assert.Contains(t, s.get("/?hidden=1").Body.String(), `aria-checked="true" data-action="toggle-hidden" href="/"`)
+	assert.Contains(t, body, `aria-checked="false" data-action="toggle-hidden" href="/hidden/"`)
+	assert.Contains(t, s.get("/hidden/").Body.String(), `aria-checked="true" data-action="toggle-hidden" href="/"`)
 
 	for path, media := range map[string]string{
 		"/assets/app.css":     "text/css; charset=utf-8",

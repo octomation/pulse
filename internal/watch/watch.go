@@ -103,6 +103,9 @@ func New(o Options) *Service {
 // clock returns the time of a record: UTC, to the second.
 func (s *Service) clock() time.Time { return s.now().UTC().Truncate(time.Second) }
 
+// Now returns the time of the service's clock.
+func (s *Service) Now() time.Time { return s.now() }
+
 // Snooze returns how long "Skip" and "Mark all shown as seen" hide a
 // repository.
 func (s *Service) Snooze() config.Period { return s.snooze }
@@ -288,11 +291,19 @@ func reason(list trend.List, err error) string {
 	return text
 }
 
-// Mark records "Interesting" or "Skip" for a repository: "Interesting"
-// bookmarks it with the comment, "Skip" snoozes it. The record is on disk
-// when Mark returns nil; when it cannot be written, Mark fails and the
-// repository stays as it was. It loads nothing.
-func (s *Service) Mark(action store.Action, repo trend.Repo, comment string) error {
+// Scope is the page a mark is made on: the last snapshot of each list taken
+// at From or later and before To. A zero From has no lower bound: today's
+// page as it stood at To. The zero scope is today: the latest snapshots.
+type Scope struct {
+	From, To time.Time
+}
+
+// Mark records "Interesting" or "Skip" for a repository, on the page of the
+// scope: "Interesting" bookmarks it with the comment, "Skip" snoozes it.
+// The mark names the lists the repository is in on that page. The record is
+// on disk when Mark returns nil; when it cannot be written, Mark fails and
+// the repository stays as it was. It loads nothing.
+func (s *Service) Mark(action store.Action, repo trend.Repo, comment string, scope Scope) error {
 	switch {
 	case action != store.Interesting && action != store.Skip:
 		return fmt.Errorf("%w: the action is %q, want interesting or skip", ErrInvalid, action)
@@ -302,21 +313,27 @@ func (s *Service) Mark(action store.Action, repo trend.Repo, comment string) err
 	if action == store.Skip {
 		comment = ""
 	}
-	current := s.memberships()
+	current, err := s.memberships(scope)
+	if err != nil {
+		return err
+	}
 	return s.store.AppendMarks(newMark(s.clock(), action, repo, comment, current))
 }
 
 // MarkSeen records "Mark all shown as seen" for exactly the repositories the
-// page showed: one write for all of them. A repository that the marks hide
-// already gets no second mark. It loads nothing and returns the number it
-// marked.
-func (s *Service) MarkSeen(repos []trend.Repo) (int, error) {
+// page of the scope showed: one write for all of them. A repository that the
+// marks hide already gets no second mark. It loads nothing and returns the
+// number it marked.
+func (s *Service) MarkSeen(repos []trend.Repo, scope Scope) (int, error) {
 	now := s.clock()
 	seen := map[string]bool{}
 	for key := range s.marks(now).seen {
 		seen[key] = true
 	}
-	current := s.memberships()
+	current, err := s.memberships(scope)
+	if err != nil {
+		return 0, err
+	}
 	var marks []store.Mark
 	for _, repo := range repos {
 		if seen[repo.Key()] {
@@ -343,15 +360,16 @@ type membership struct {
 	lists []Membership
 }
 
-// memberships maps the key of every repository of the view to the lists it
-// is in, in the order of trend.Lists.
-func (s *Service) memberships() map[string]*membership {
+// memberships maps the key of every repository of the page of the scope to
+// the lists it is in, in the order of trend.Lists.
+func (s *Service) memberships(scope Scope) (map[string]*membership, error) {
+	snapshots, err := s.snapshotsIn(scope.From, scope.To)
+	if err != nil {
+		return nil, err
+	}
 	index := map[string]*membership{}
-	for _, list := range trend.Lists() {
-		snapshot, found := s.store.Latest(list)
-		if !found {
-			continue
-		}
+	for _, snapshot := range snapshots {
+		list := snapshot.List
 		for _, entry := range snapshot.Entries {
 			key := entry.Repo.Key()
 			if index[key] == nil {
@@ -360,7 +378,7 @@ func (s *Service) memberships() map[string]*membership {
 			index[key].lists = append(index[key].lists, Membership{List: list, Rank: entry.Rank})
 		}
 	}
-	return index
+	return index, nil
 }
 
 // newMark builds the record of a mark: the repository as the lists write it,

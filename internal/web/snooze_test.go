@@ -16,7 +16,7 @@ import (
 func (s *service) at(when time.Time) page {
 	s.t.Helper()
 	s.clock.Set(when)
-	return s.open("/?hidden=1")
+	return s.open("/hidden/")
 }
 
 const day = 24 * time.Hour
@@ -118,6 +118,20 @@ func TestConfiguredSnooze(t *testing.T) {
 	assert.Contains(t, s.at(time.Date(2026, time.December, 19, 8, 15, 0, 0, time.UTC)).keys("shown"), "tailscale/tailscale")
 }
 
+// A past day is judged by the marks as they stand now: a snooze that ended
+// shows the repository on that day too.
+func TestAnEndedSnoozeShowsOnAPastDay(t *testing.T) {
+	s := start(t, "")
+	s.loader.Day(t, "testdata/yesterday.json")
+	s.open("/")
+	require.Equal(t, http.StatusOK, s.mark("skip", "tailscale/tailscale", "").Code)
+	s.clock.Set(time.Date(2026, time.November, 25, 8, 15, 0, 0, time.UTC))
+	assert.NotContains(t, s.open("/days/2026-11-18/").keys("shown"), "tailscale/tailscale")
+
+	s.clock.Set(time.Date(2027, time.March, 1, 8, 15, 0, 0, time.UTC))
+	assert.Contains(t, s.open("/days/2026-11-18/").keys("shown"), "tailscale/tailscale")
+}
+
 // The snooze is counted on the calendar of the computer, and a month without
 // the day of the mark ends on its last day.
 func TestSnoozeOnTheLocalCalendar(t *testing.T) {
@@ -129,7 +143,7 @@ func TestSnoozeOnTheLocalCalendar(t *testing.T) {
 	s.open("/")
 	require.Equal(t, http.StatusOK, s.mark("skip", "tailscale/tailscale", "").Code)
 	assert.Equal(t, "Skipped on Dec 1, 2026, until Mar 1, 2027",
-		s.open("/?hidden=1").card(t, "tailscale/tailscale").reasons["seen"])
+		s.open("/hidden/").card(t, "tailscale/tailscale").reasons["seen"])
 
 	clamp := startWith(t, "", nil)
 	clamp.loader.Day(t, "testdata/yesterday.json")
@@ -137,5 +151,5 @@ func TestSnoozeOnTheLocalCalendar(t *testing.T) {
 	clamp.open("/")
 	require.Equal(t, http.StatusOK, clamp.mark("skip", "golang/go", "").Code)
 	assert.Equal(t, "Skipped on Nov 30, 2026, until Feb 28, 2027",
-		clamp.open("/?hidden=1").card(t, "golang/go").reasons["seen"])
+		clamp.open("/hidden/").card(t, "golang/go").reasons["seen"])
 }

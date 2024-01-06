@@ -85,7 +85,8 @@ func NewServer() *cobra.Command {
 			"than an hour old; \"Refresh\" loads all six now. \"Interesting\" bookmarks a\n" +
 			"repository, with an optional comment, for good; \"Skip\" and \"Mark all shown as\n" +
 			"seen\" hide what you have looked at for three months, and `pulsectl bookmarks`\n" +
-			"prints the bookmarks.\n" +
+			"prints the bookmarks. /hidden/ adds the hidden ones with their reasons, and\n" +
+			"/days/YYYY-MM-DD/ shows a past day as its lists stood then.\n" +
 			"\n" +
 			"A click on a repository opens it in the reader of the same page, with the\n" +
 			"facts and the README of GitHub. pulse asks api.github.com for them when a\n" +

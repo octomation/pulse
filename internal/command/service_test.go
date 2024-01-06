@@ -225,7 +225,7 @@ func TestBookmarksThroughTheCommands(t *testing.T) {
 		restarted := serve(t, args...)
 		export(restarted.addr)
 
-		status, page := request(t, http.MethodGet, restarted.loopback()+"/?hidden=1", "")
+		status, page := request(t, http.MethodGet, restarted.loopback()+"/hidden/", "")
 		require.Equal(t, http.StatusOK, status)
 		assert.Contains(t, page, `data-repo="ghostty-org/ghostty" data-state="hidden"`)
 		assert.Contains(t, page, "Bookmarked in pulse: <q>try for the hub</q>")

@@ -48,7 +48,7 @@ func TestAnotherSourceHidesWithItsReasons(t *testing.T) {
 	})
 	s.loader.Day(t, "testdata/yesterday.json")
 
-	page := s.open("/?hidden=1")
+	page := s.open("/hidden/")
 	assert.Equal(t, []string{"golang/go"}, page.keys("hidden"))
 	assert.Equal(t, map[string]string{"stars": "Starred: starred in 2019"}, page.card(t, "golang/go").reasons)
 	assert.Contains(t, page.html, `data-source="stars" data-vault="ok">Stars: 1 repository`)
@@ -95,7 +95,7 @@ func TestTheVaultLineNamesOriginCountAndNewestNote(t *testing.T) {
 
 	s := start(t, notes)
 	s.loader.Day(t, "testdata/yesterday.json")
-	page := s.open("/?hidden=1")
+	page := s.open("/hidden/")
 	_, line, found := strings.Cut(page.html, `data-vault="ok"`)
 	require.True(t, found)
 	line = text(line)
@@ -133,7 +133,7 @@ func TestObsidianWarning(t *testing.T) {
 
 	outside := startWith(t, copied, func(s *service) { s.obsidian = list })
 	outside.loader.Day(t, "testdata/yesterday.json")
-	page = outside.open("/?hidden=1")
+	page = outside.open("/hidden/")
 	assert.Contains(t, page.html, "data-warning>Vault: the directory is not inside any vault Obsidian knows on this computer")
 	assert.Contains(t, page.html, `data-vault="ok"`, "a warning is not a failure")
 	assert.Contains(t, page.keys("hidden"), "golang/go")

@@ -5,6 +5,12 @@
   'use strict';
 
   var showsHidden = document.body.dataset.view === 'hidden';
+  // base is the path of the day of the page, day its date when it is a past
+  // day: the marks of the page are made on that day.
+  var base = document.body.dataset.base || '/';
+  var day = document.body.dataset.day || '';
+  // latest says that the page is today's: it shows the latest snapshots.
+  var latest = document.body.dataset.latest === 'true';
   var shown = document.getElementById('shown');
   var hidden = document.getElementById('hidden');
   var empty = document.getElementById('empty');
@@ -22,6 +28,12 @@
   // post sends JSON to the API and resolves with its answer, or rejects with
   // the reason the service gave.
   function post(path, body) {
+    if (day) {
+      body.day = day;
+    }
+    if (latest) {
+      body.latest = true;
+    }
     return fetch(path, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -60,6 +72,10 @@
   // service says what to show in its place; when it has more to show than
   // this page knows of, the page is loaded again.
   function update(answer) {
+    if (answer.reload) {
+      window.location.reload();
+      return;
+    }
     document.querySelector('[data-count="new"]').textContent = answer.new;
     document.querySelector('[data-count="hidden"]').textContent = answer.hidden;
     var left = shownCards().length;
@@ -174,7 +190,7 @@
       history.replaceState(null, '', '#' + name);
     }
     sheet.focus({ preventScroll: true });
-    fetch('/repos/' + name.split('/').map(encodeURIComponent).join('/')).then(function (response) {
+    fetch(base + 'repos/' + name.split('/').map(encodeURIComponent).join('/')).then(function (response) {
       return response.text().then(function (text) {
         if (!response.ok) {
           throw new Error(text.trim() || 'pulse answered ' + response.status);
@@ -209,7 +225,7 @@
     reader.hidden = true;
     readerBody.textContent = '';
     document.body.classList.remove('is-reading');
-    history.replaceState(null, '', window.location.pathname + window.location.search);
+    history.replaceState(null, '', window.location.pathname);
   }
 
   function step(by) {

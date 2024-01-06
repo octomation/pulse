@@ -95,6 +95,9 @@ type Store struct {
 	marks    []Mark
 	attempts map[string]Attempt
 	latest   map[trend.List]trend.Snapshot
+	// times holds the time of every snapshot of a list, as its file name
+	// writes it, oldest first.
+	times map[trend.List][]time.Time
 }
 
 // Open reads the state of the directory, creating it when it is not there.
@@ -104,7 +107,10 @@ func Open(dir string) (*Store, error) {
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return nil, fmt.Errorf("data directory: %w", err)
 	}
-	s := &Store{dir: dir, attempts: map[string]Attempt{}, latest: map[trend.List]trend.Snapshot{}}
+	s := &Store{
+		dir: dir, attempts: map[string]Attempt{},
+		latest: map[trend.List]trend.Snapshot{}, times: map[trend.List][]time.Time{},
+	}
 
 	err := readLines(filepath.Join(dir, MarksFile), func(line []byte) error {
 		var mark Mark
@@ -137,13 +143,14 @@ func Open(dir string) (*Store, error) {
 	}
 
 	for _, list := range trend.Lists() {
-		snapshot, found, err := readLatest(s.snapshotDir(list), list)
+		snapshot, found, times, err := readLatest(s.snapshotDir(list), list)
 		if err != nil {
 			return nil, err
 		}
 		if found {
 			s.latest[list] = snapshot
 		}
+		s.times[list] = times
 	}
 	return s, nil
 }
@@ -183,7 +190,54 @@ func (s *Store) SaveSnapshot(snapshot trend.Snapshot) error {
 	if current, found := s.latest[snapshot.List]; !found || !snapshot.FetchedAt.Before(current.FetchedAt) {
 		s.latest[snapshot.List] = snapshot
 	}
+	if at, ok := snapshotTime(name); ok {
+		times := s.times[snapshot.List]
+		if i, found := slices.BinarySearchFunc(times, at, time.Time.Compare); !found {
+			s.times[snapshot.List] = slices.Insert(times, i, at)
+		}
+	}
 	return nil
+}
+
+// Times returns the time of every stored snapshot of the list, oldest
+// first.
+func (s *Store) Times(list trend.List) []time.Time {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return slices.Clone(s.times[list])
+}
+
+// LatestIn returns the last snapshot of the list taken at from or later and
+// before to. It reads the file of that snapshot: a file that cannot be read
+// is an error that names it.
+func (s *Store) LatestIn(list trend.List, from, to time.Time) (trend.Snapshot, bool, error) {
+	s.mu.RLock()
+	times := s.times[list]
+	i, _ := slices.BinarySearchFunc(times, to, time.Time.Compare)
+	var at time.Time
+	if i > 0 && !times[i-1].Before(from) {
+		at = times[i-1]
+	}
+	s.mu.RUnlock()
+	if at.IsZero() {
+		return trend.Snapshot{}, false, nil
+	}
+	path := filepath.Join(s.snapshotDir(list), at.Format(snapshotName)+".json")
+	snapshot, err := readSnapshot(path, list)
+	if err != nil {
+		return trend.Snapshot{}, false, fmt.Errorf("%s: %w", path, err)
+	}
+	return snapshot, true, nil
+}
+
+// snapshotTime reads the time of a snapshot from the name of its file.
+func snapshotTime(name string) (time.Time, bool) {
+	base, found := strings.CutSuffix(name, ".json")
+	if !found {
+		return time.Time{}, false
+	}
+	at, err := time.ParseInLocation(snapshotName, base, time.UTC)
+	return at, err == nil
 }
 
 // Latest returns the latest successful snapshot of the list.
@@ -422,29 +476,42 @@ func writeAtomic(dir, name string, content []byte) error {
 	return nil
 }
 
-// readLatest reads the newest snapshot of a list: the names sort by time.
-// What a cut write left behind, a temporary file, is not a snapshot.
-func readLatest(dir string, list trend.List) (trend.Snapshot, bool, error) {
+// readLatest reads the newest snapshot of a list, the names sort by time,
+// and returns the times of all of them, oldest first. What a cut write left
+// behind, a temporary file, is not a snapshot; a file whose name is not a
+// time is read as the newest when it sorts last, but has no day.
+func readLatest(dir string, list trend.List) (trend.Snapshot, bool, []time.Time, error) {
 	entries, err := os.ReadDir(dir)
 	if errors.Is(err, fs.ErrNotExist) {
-		return trend.Snapshot{}, false, nil
+		return trend.Snapshot{}, false, nil, nil
 	}
 	if err != nil {
-		return trend.Snapshot{}, false, err
+		return trend.Snapshot{}, false, nil, err
 	}
+	var (
+		times    []time.Time
+		snapshot trend.Snapshot
+		found    bool
+	)
 	for _, entry := range slices.Backward(entries) {
 		name := entry.Name()
 		if entry.IsDir() || strings.HasPrefix(name, ".") || !strings.HasSuffix(name, ".json") {
 			continue
 		}
-		path := filepath.Join(dir, name)
-		snapshot, err := readSnapshot(path, list)
-		if err != nil {
-			return trend.Snapshot{}, false, fmt.Errorf("%s: %w", path, err)
+		if at, ok := snapshotTime(name); ok {
+			times = append(times, at)
 		}
-		return snapshot, true, nil
+		if found {
+			continue
+		}
+		path := filepath.Join(dir, name)
+		if snapshot, err = readSnapshot(path, list); err != nil {
+			return trend.Snapshot{}, false, nil, fmt.Errorf("%s: %w", path, err)
+		}
+		found = true
 	}
-	return trend.Snapshot{}, false, nil
+	slices.Reverse(times)
+	return snapshot, found, times, nil
 }
 
 func readSnapshot(path string, list trend.List) (trend.Snapshot, error) {

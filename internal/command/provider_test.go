@@ -44,7 +44,7 @@ func TestTheConfigurationChoosesTheVaultProvider(t *testing.T) {
 	service := serve(t, "--listen", "127.0.0.1:0", "--config", config, "--data-dir", t.TempDir())
 	assert.Contains(t, service.stdout.String(), "vault: through shelf (config "+config+")\n")
 
-	status, page := request(t, http.MethodGet, service.loopback()+"/?hidden=1", "")
+	status, page := request(t, http.MethodGet, service.loopback()+"/hidden/", "")
 	require.Equal(t, http.StatusOK, status)
 	assert.Contains(t, page, `data-repo="zed-industries/zed" data-state="hidden"`)
 	assert.Contains(t, page, `<li class="reason" data-reason="vault">On the shelf: shelf 3</li>`)
