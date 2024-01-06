@@ -49,6 +49,12 @@ type page struct {
 	Sources     []hide.Status
 	Problem     string
 	Empty       empty
+	// Flow is the shown cards in the order of the page, for flow mode.
+	Flow []card
+	// Reservations say why the cards may not be the whole picture: lists
+	// that failed and sources that could not be read. Flow mode shows them,
+	// since it has no status of the lists.
+	Reservations []string
 }
 
 // month is a month of the calendar: weeks from Monday, with blanks around
@@ -256,7 +262,24 @@ func newPage(view watch.View, showHidden bool) page {
 	}
 	p.HiddenCount = view.HiddenCount()
 	p.Sections = layout(p.Shown)
+	for _, part := range p.Sections {
+		p.Flow = append(p.Flow, part.Cards...)
+	}
+
 	p.Empty = emptyOf(view)
+	if failed := view.FailedLists(); failed > 0 {
+		p.Reservations = append(p.Reservations, fmt.Sprintf("%s of %d failed to load, so this is not the whole picture.",
+			plural(failed, "list", "lists"), len(view.Lists)))
+	}
+	for _, source := range view.FailedSources() {
+		p.Reservations = append(p.Reservations, fmt.Sprintf("The %s could not be read: %s. The cards may include what is already in the %s.",
+			source.Source, source.Error, source.Source))
+	}
+	for _, source := range view.Sources {
+		if source.Warning != "" {
+			p.Reservations = append(p.Reservations, fmt.Sprintf("%s: %s.", capital(source.Source), source.Warning))
+		}
+	}
 	return p
 }
 

@@ -48,6 +48,7 @@
   <p class="motto">trend-watch <i>·</i> only what you have not seen</p>
   <nav class="controls">
     <a class="switch" role="switch" aria-checked="{{if .ShowHidden}}true{{else}}false{{end}}" data-action="toggle-hidden" href="{{.Base}}{{if not .ShowHidden}}hidden/{{end}}"><span class="knob" aria-hidden="true"></span>Show hidden</a>
+    <a class="button" data-action="flow" href="{{.Base}}flow/" title="One card at a time">Flow</a>
     {{- if .Today}}
     <button type="button" class="button" data-action="refresh" title="Load all six lists now">Refresh</button>
     {{- end}}
@@ -127,6 +128,11 @@
 </main>
 
 <footer class="colophon">pulse serves this page from your computer. <kbd>j</kbd> <kbd>k</kbd> move between repositories in the reader, <kbd>Esc</kbd> closes it.</footer>
+{{template "reader-panel"}}
+
+</body>
+</html>
+{{- define "reader-panel"}}
 
 <div class="reader" id="reader" hidden>
   <div class="reader-shade" data-action="close-reader"></div>
@@ -140,9 +146,7 @@
     <div class="reader-body" id="reader-body"></div>
   </aside>
 </div>
-
-</body>
-</html>
+{{- end}}
 {{- define "empty"}}
 <section class="empty is-{{.Kind}}" data-empty="{{.Kind}}">
   <h2>{{.Title}}</h2>

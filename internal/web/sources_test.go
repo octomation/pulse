@@ -154,3 +154,21 @@ func TestEmptyPageKeepsEveryReservation(t *testing.T) {
 	assert.Contains(t, page.html, "1 list of 6 failed to load")
 	assert.Contains(t, page.html, "The list may also include what is already in the stars, which could not be read.")
 }
+
+// Flow mode has no status of the lists, so it says what may be missing: a
+// failed source, a failed list, a warning; and a flow without cards says
+// why, as the page does.
+func TestFlowKeepsTheReservations(t *testing.T) {
+	s := startWith(t, "", func(s *service) { s.hide = hide.Facade{fakeSource{fail: "connection refused"}} })
+	s.loader.Day(t, "testdata/yesterday.json")
+	s.loader.Fail(githubDaily, errors.New("the site is down"))
+	body := s.getFlow("/flow/")
+	assert.Contains(t, body, "The stars could not be read: connection refused. The cards may include what is already in the stars.")
+	assert.Contains(t, body, "1 list of 6 failed to load, so this is not the whole picture.")
+
+	failed := start(t, "")
+	body = failed.getFlow("/flow/")
+	assert.Empty(t, flow(body))
+	assert.Contains(t, body, `data-empty="failed"><h2>No list could be loaded</h2>`)
+	assert.NotContains(t, body, "Nothing new")
+}

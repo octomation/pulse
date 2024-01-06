@@ -1,6 +1,6 @@
 ---
 title: Trend watch
-description: One local page at http://pulse.localhost:17842/ with the trending GitHub repositories you have not seen or bookmarked, a reader for each of them, a calendar of past days, and pulsectl bookmarks to export the ones you marked as interesting.
+description: One local page at http://pulse.localhost:17842/ with the trending GitHub repositories you have not seen or bookmarked, a reader for each of them, a calendar of past days, a flow mode with one card at a time, and pulsectl bookmarks to export the ones you marked as interesting.
 ---
 
 # Trend watch
@@ -155,8 +155,8 @@ pulse --listen 127.0.0.1:8080
 The page reads like a morning paper:
 
 - The masthead has the date, which opens the [calendar](#past-days), the
-  counts, as in `54 new · 30 hidden`, and **Show hidden**, **Refresh** and
-  **Mark all shown as seen**.
+  counts, as in `54 new · 30 hidden`, and **Show hidden**, **Flow**,
+  **Refresh** and **Mark all shown as seen**.
 - Below it are the six lists, each with the time of its last successful load
   and the number of its repositories, and the state of the vault filter.
 - **Front page** holds the repositories that are in most lists at once, the
@@ -175,7 +175,7 @@ label per list with its position there: `trendshift daily #8`,
 | **Mark all shown as seen** | Marks every repository the page shows at that moment as seen, for three months |
 
 Only these three actions mark a repository: opening the page, the reader,
-**Show hidden**, **Refresh** and an export mark nothing. A card
+**Show hidden**, **Flow**, **Refresh** and an export mark nothing. A card
 leaves the page once its mark is written to disk; if it cannot be written,
 the card stays and shows the error.
 
@@ -256,6 +256,7 @@ the previous and the next day that has snapshots.
 | `http://pulse.localhost:17842/` | Today |
 | `http://pulse.localhost:17842/days/2026-11-19/` | The lists as they stood on November 19, 2026 |
 | `http://pulse.localhost:17842/days/2026-11-19/hidden/` | The same day with the hidden repositories |
+| `http://pulse.localhost:17842/days/2026-11-19/flow/` | The cards of that day in [flow mode](#flow-mode) |
 
 A day is a calendar day in the time zone of your computer. The page of a past
 day shows the last successful load of each list that day; a list that did not
@@ -272,6 +273,42 @@ the network, so it has no **Refresh**.
 A date pulse has no snapshots for, or one that is not written as
 `YYYY-MM-DD`, answers `404` with a link to today. The page of today's date is
 today's page.
+
+### Flow mode
+
+**Flow** goes through the new repositories one card at a time, with the
+answers always in the same place at the bottom of the screen:
+
+```text
+  ← THE PAPER          SUNDAY, NOVEMBER 22, 2026          3 OF 28 · 26 LEFT
+
+  GO · IN 2 LISTS
+  Tencent
+  LoopForge
+  Self-hosted workflows for coding-agent delivery.
+  ○ trendshift daily #1   ■ github weekly #7
+
+  Why it is interesting (optional)
+  [ ← SKIP ]            [ ↓ LATER ]            [ INTERESTING → ]
+```
+
+| Answer | Keys and gestures | What it does |
+| --- | --- | --- |
+| **Skip** | `←`, or swipe left | Marks the repository as seen, as **Skip** on the page |
+| **Interesting** | `→`, or swipe right; `Enter` in the comment field | Bookmarks it with the comment, as **Interesting** on the page |
+| **Later** | `↓` | Marks nothing and shows the next card |
+
+The flow holds the cards the page shows, in the order of the page; hidden
+repositories are not in it. The next card appears once the answer is written
+to disk; if it cannot be written, the card stays with the error. A card left
+for later stays on the page and is in the next flow. To use the arrows after
+typing a comment, press `Esc` to leave the field. A click on the name opens
+the reader, and `Esc` brings you back to the same card. When no card is left,
+the flow says so and links back to the page.
+
+The flow of today is at `http://pulse.localhost:17842/flow/`, the flow of a
+past day at `/days/YYYY-MM-DD/flow/`. It has no **Mark all shown as seen**,
+and an answer cannot be taken back.
 
 ### Loading and errors
 

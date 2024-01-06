@@ -25,8 +25,8 @@ import (
 	"go.octolab.org/toolset/pulse/internal/watch"
 )
 
-//go:embed templates/page.html templates/reader.html templates/missing.html
-//go:embed assets/app.css assets/app.js assets/favicon.svg
+//go:embed templates/page.html templates/reader.html templates/flow.html templates/missing.html
+//go:embed assets/app.css assets/app.js assets/flow.js assets/favicon.svg
 var files embed.FS
 
 // MaxBodyBytes limits the body of a request.
@@ -92,8 +92,10 @@ func NewHandler(o Options) (http.Handler, error) {
 
 	h.mux.HandleFunc("GET /{$}", h.index(modePage))
 	h.mux.HandleFunc("GET /hidden/{$}", h.index(modeHidden))
+	h.mux.HandleFunc("GET /flow/{$}", h.index(modeFlow))
 	h.mux.HandleFunc("GET /days/{date}/{$}", h.index(modePage))
 	h.mux.HandleFunc("GET /days/{date}/hidden/{$}", h.index(modeHidden))
+	h.mux.HandleFunc("GET /days/{date}/flow/{$}", h.index(modeFlow))
 	h.mux.HandleFunc("GET /assets/{name}", h.asset)
 	h.mux.HandleFunc("GET /repos/{owner}/{name}", h.story)
 	h.mux.HandleFunc("GET /days/{date}/repos/{owner}/{name}", h.story)
@@ -169,6 +171,7 @@ func sameOrigin(origin, host string) bool {
 const (
 	modePage   = ""
 	modeHidden = "hidden/"
+	modeFlow   = "flow/"
 )
 
 // place is the day a page shows: today, or a past day with snapshots.
@@ -248,8 +251,8 @@ func (h *handler) viewOf(ctx context.Context, p place, load bool) (watch.View, e
 	}
 }
 
-// index serves a page of a day in a mode: the paper, or the paper with the
-// hidden cards. Today's page loads the lists that are due; no
+// index serves a page of a day in a mode: the paper, the paper with the
+// hidden cards, or the flow. Today's page loads the lists that are due; no
 // page marks anything, and none takes a query parameter.
 func (h *handler) index(mode string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -285,8 +288,12 @@ func (h *handler) index(mode string) http.HandlerFunc {
 		if !next.IsZero() {
 			p.Next = dayPath(next, h.Location) + mode
 		}
+		name := "page.html"
+		if mode == modeFlow {
+			name = "flow"
+		}
 		var buffer bytes.Buffer
-		if err := h.page.ExecuteTemplate(&buffer, "page.html", p); err != nil {
+		if err := h.page.ExecuteTemplate(&buffer, name, p); err != nil {
 			http.Error(w, "the page could not be rendered: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -313,6 +320,7 @@ func (h *handler) asset(w http.ResponseWriter, r *http.Request) {
 	types := map[string]string{
 		"app.css":     "text/css; charset=utf-8",
 		"app.js":      "text/javascript; charset=utf-8",
+		"flow.js":     "text/javascript; charset=utf-8",
 		"favicon.svg": "image/svg+xml",
 	}
 	raw, err := files.ReadFile("assets/" + name)

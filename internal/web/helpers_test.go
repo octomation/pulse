@@ -202,6 +202,21 @@ func (p page) calendar() []string {
 	return paths
 }
 
+var flowPattern = regexp.MustCompile(`<article class="flow-card" data-repo="([^"]+)" data-name="([^"]+)"`)
+
+// flow returns the keys of the cards of a flow page, in their order.
+func flow(body string) []string {
+	var keys []string
+	for _, match := range flowPattern.FindAllStringSubmatch(body, -1) {
+		keys = append(keys, html.UnescapeString(match[1]))
+	}
+	return keys
+}
+
+// order returns the keys of the shown cards in the order of the page: the
+// sections in their order.
+func (p page) order() []string { return p.keys("shown") }
+
 // page is what a rendered page shows.
 type page struct {
 	html  string

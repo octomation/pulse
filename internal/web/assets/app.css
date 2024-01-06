@@ -281,6 +281,44 @@ kbd { font: 600 11px/1 var(--sans); border: 1px solid var(--rule); border-radius
 .origin { font-style: normal; font-family: var(--sans); font-size: 12.5px; }
 a.button { display: inline-block; text-decoration: none; }
 
+/* Flow mode: one card at a time, the answers always in the same place */
+body.is-flow { max-width: 760px; padding-bottom: 200px; }
+.flow-head {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+  padding: 18px 0 8px; border-bottom: 3px double var(--heavy);
+  font: 600 11.5px/1.4 var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--soft);
+}
+.flow-back { text-decoration: none; color: var(--ink); }
+.flow-count b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.flow-stage { padding: 28px 0; min-height: 50vh; touch-action: pan-y; }
+.flow-card { display: flex; flex-direction: column; }
+.flow-note { margin: 10px 0 0; color: var(--error); font: italic 14px/1.4 var(--serif); }
+.flow-card .card-name { font-size: clamp(34px, 6vw, 56px); line-height: 1.04; letter-spacing: -.022em; }
+.flow-card .card-name .owner { font-size: 14px; margin-bottom: 4px; }
+.flow-card .description { font-size: 21px; line-height: 1.45; margin-top: 16px; }
+.flow-end { text-align: center; padding: 56px 0; }
+.flow-end h2 { margin: 0; font: 900 clamp(30px, 5vw, 48px)/1.05 var(--display); }
+.flow-end p { color: var(--soft); font-style: italic; }
+.flow-bar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 4;
+  padding: 12px 16px calc(14px + env(safe-area-inset-bottom));
+  background: var(--sheet); border-top: 1px solid var(--heavy);
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
+.flow-bar.is-busy { opacity: .6; }
+.flow-form { width: min(728px, 100%); margin: 0; }
+.flow-form input {
+  width: 100%; font: italic 15px/1.4 var(--serif); color: var(--ink);
+  background: transparent; border: 0; border-bottom: 1px solid var(--rule); padding: 4px 0;
+}
+.flow-form input:focus { outline: 0; border-bottom-color: var(--ink); }
+.flow-answers { width: min(728px, 100%); display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+.flow-answers .button { padding: 14px 8px; font-size: 12.5px; }
+.flow-error { margin: 0; width: min(728px, 100%); color: var(--error); font: 13px/1.4 var(--sans); }
+.is-flow .story .actions { display: none; }
 @media (max-width: 520px) {
+  .flow-day { display: none; }
+  .flow-answers { gap: 6px; }
+  .flow-answers .button { padding: 14px 4px; letter-spacing: .04em; }
   .calendar-sheet { left: -8px; }
 }

@@ -483,6 +483,13 @@ test: go-test
 test-with-coverage: go-test-with-coverage
 .PHONY: test-with-coverage
 
+# test-browser checks flow mode in headless Chrome: the keys, the swipes, a
+# failed write and the end of the flow. playwright-core is not a dependency:
+# PLAYWRIGHT_CORE names an installed copy, as for docs/scripts/og.mjs.
+test-browser:
+	$(AT) node tests/browser/flow.mjs
+.PHONY: test-browser
+
 check: lint test
 .PHONY: check
 

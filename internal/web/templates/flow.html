@@ -1,0 +1,65 @@
+{{- define "flow"}}<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>{{if .Flow}}({{len .Flow}}) {{end}}Flow · pulse</title>
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/assets/app.css">
+<script src="/assets/flow.js" defer></script>
+</head>
+<body class="is-flow" data-view="flow" data-base="{{.Base}}" data-day="{{.Day}}"{{if .Today}} data-latest="true"{{end}}>
+
+<header class="flow-head">
+  <a class="flow-back" href="{{.Base}}" data-flow="back">← The paper</a>
+  <span class="flow-day"><time datetime="{{iso .Date}}">{{day .Date}}</time></span>
+  <span class="flow-count" id="flow-count" aria-live="polite">{{if .Flow}}<b data-flow="place">1</b> of <b data-flow="total">{{len .Flow}}</b> <i>·</i> <b data-flow="left">{{len .Flow}}</b> left{{end}}</span>
+</header>
+{{- range .Reservations}}
+<p class="flow-note" role="alert" data-reservation>{{.}}</p>
+{{- end}}
+
+<main class="flow-stage" id="flow-stage">
+  {{- range $i, $c := .Flow}}
+  <article class="flow-card" data-repo="{{.Key}}" data-name="{{.Repo}}" data-place="{{$i}}"{{if $i}} hidden{{end}}>
+    <p class="kicker">{{if .Language}}{{.Language}} <i>·</i> {{end}}{{among (len .Lists)}}</p>
+    <h2 class="card-name"><a href="{{.Repo.URL}}" data-action="read" rel="noopener noreferrer"><span class="owner">{{.Repo.Owner}}</span><span class="slash">/</span><span class="name">{{.Repo.Name}}</span></a></h2>
+    {{- if .Description}}
+    <p class="description" data-action="read">{{.Description}}</p>
+    {{- end}}
+    <ul class="badges">
+      {{- range .Lists}}
+      <li class="badge is-{{.List.Source}}" data-list="{{.List}}">{{title .List}} <b>#{{.Rank}}</b></li>
+      {{- end}}
+    </ul>
+  </article>
+  {{- end}}
+  <section class="flow-end" id="flow-end" data-flow="end"{{if .Flow}} hidden{{end}}>
+    {{- if .Flow}}
+    <h2>That was the last card</h2>
+    <p>Every card of the flow has an answer or waits for later.</p>
+    {{- else}}
+    <div data-empty="{{.Empty.Kind}}"><h2>{{.Empty.Title}}</h2>
+    <p>{{.Empty.Text}}</p></div>
+    {{- end}}
+    <p><a class="button primary" href="{{.Base}}" data-flow="page">Back to the page</a></p>
+  </section>
+</main>
+
+<footer class="flow-bar" id="flow-bar"{{if not .Flow}} hidden{{end}}>
+  <p class="flow-error" id="flow-error" role="alert" hidden></p>
+  <form class="flow-form" id="flow-form">
+    <input type="text" name="comment" maxlength="500" autocomplete="off" placeholder="Why it is interesting (optional)" aria-label="Comment">
+  </form>
+  <div class="flow-answers">
+    <button type="button" class="button" data-answer="skip" data-key="ArrowLeft" title="Mark as seen (←, swipe left)">← Skip</button>
+    <button type="button" class="button" data-answer="later" data-key="ArrowDown" title="Decide later (↓)">↓ Later</button>
+    <button type="button" class="button primary" data-answer="interesting" data-key="ArrowRight" title="Bookmark (→, swipe right)">Interesting →</button>
+  </div>
+</footer>
+{{template "reader-panel"}}
+
+</body>
+</html>
+{{- end}}

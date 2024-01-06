@@ -189,7 +189,7 @@ func TestAPastDayLoadsNothing(t *testing.T) {
 	threeDays(s)
 	loads := s.loader.Total()
 	for _, path := range []string{
-		"/days/2026-11-17/", "/days/2026-11-17/hidden/", "/days/2026-11-17/repos/second/one",
+		"/days/2026-11-17/", "/days/2026-11-17/hidden/", "/days/2026-11-17/flow/", "/days/2026-11-17/repos/second/one",
 	} {
 		response := s.get(path)
 		require.Equal(t, http.StatusOK, response.Code, path)
@@ -226,7 +226,7 @@ func TestCalendar(t *testing.T) {
 
 	for _, path := range []string{
 		"/days/2026-11-15/", "/days/2026-11-20/hidden/", "/days/2026-11-1/", "/days/2026-13-01/",
-		"/days/yesterday/", "/days/2026-11-15/repos/second/one",
+		"/days/yesterday/", "/days/2026-11-15/flow/", "/days/2026-11-15/repos/second/one",
 	} {
 		response := s.get(path)
 		assert.Equal(t, http.StatusNotFound, response.Code, path)
