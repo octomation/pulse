@@ -28,12 +28,12 @@ your user and without `sudo`. From then on it starts when you log in, so the
 page is always at `http://pulse.localhost:17842/`.
 
 On macOS or Linux, on `amd64` or `arm64`, you can also take
-`pulse_0.1.1_<os>-<arch>.tar.gz` from the
-[v0.1.1 release](https://github.com/octomation/pulse/releases/tag/v0.1.1), or
+`pulse_0.2.0_<os>-<arch>.tar.gz` from the
+[v0.2.0 release](https://github.com/octomation/pulse/releases/tag/v0.2.0), or
 install with Go 1.27 or later, and [run pulse in a terminal](#in-a-terminal):
 
 ```sh
-go install go.octolab.org/toolset/pulse/cmd/...@v0.1.1
+go install go.octolab.org/toolset/pulse/cmd/...@v0.2.0
 ```
 
 Check what you installed with `pulse version`.

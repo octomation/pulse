@@ -23,3 +23,14 @@ come from those two repositories, adapted to two binaries and no agent skill.
   packages, then check that `make go-tools-check` and the site build pass.
 - [ ] **After the push**: `gh workflow run cd.yml -f reason="snapshot"` on
   `main` builds a snapshot of both binaries and publishes nothing.
+
+### v0.2.0
+
+- [ ] **Before each release, until [PUL-12](issues/PUL-12.md) ships**: no
+  workflow runs `make test-browser`, so the grid of the page and flow mode
+  are checked by hand on the candidate commit, as AGENTS.md says. Remove
+  this item once a workflow runs it.
+- [ ] **From February 20, 2027**: the first skips of November 2026 end.
+  When a list still has such a repository, it is on the page again, and
+  **Show hidden** no longer lists it. If it stays hidden, file a bug
+  against the snooze of a seen mark.

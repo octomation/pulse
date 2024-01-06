@@ -251,14 +251,14 @@ export function Morning() {
   return (
     <section className="morning" ref={root} data-s={step}>
       <div className="morning-hero">
-        <Link className="release-pill" href="/changelog/v0.1.1/">Latest release · v0.1.1 <span aria-hidden="true">↗</span></Link>
+        <Link className="release-pill" href="/changelog/v0.2.0/">Latest release · v0.2.0 <span aria-hidden="true">↗</span></Link>
         <h1>Your morning, with a hand on <em>the&nbsp;pulse.</em></h1>
         <p className="pulse-lead">Six trending lists repeat each other and yesterday. pulse folds them into one quiet paper that holds only what you have not seen. Read it with your coffee, keep what matters in one click, and close the tab knowing you missed nothing.</p>
         <div className="pulse-actions">
           <a className="button-primary" href="#get-pulse">Get pulse <span aria-hidden="true">↓</span></a>
           <Link className="button-text" href="/trend-watch/">Read the guide <span aria-hidden="true">→</span></Link>
         </div>
-        <p className="hero-note">v0.1.1 · macOS & Linux · runs on your computer · free and open source</p>
+        <p className="hero-note">v0.2.0 · macOS & Linux · runs on your computer · free and open source</p>
         <p className="morning-hint" aria-hidden="true"><i />Scroll to play the morning</p>
       </div>
 
