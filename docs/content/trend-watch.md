@@ -104,7 +104,7 @@ snooze = "1 month"
 ```
 
 The period applies to the marks you already have, too. **Interesting** is not
-affected: a bookmark hides its repository for good.
+affected: a bookmark hides its repository as long as it is your answer.
 
 ## Start it
 
@@ -156,7 +156,7 @@ The page reads like a morning paper:
 
 - The masthead has the date, which opens the [calendar](#past-days), the
   counts, as in `54 new · 30 hidden`, and **Show hidden**, **Flow**,
-  **Refresh** and **Mark all shown as seen**.
+  **Queue**, **Refresh** and **Mark all shown as seen**.
 - Below it are the six lists, each with the time of its last successful load
   and the number of its repositories, and the state of the vault filter.
 - **Front page** holds the repositories that are in most lists at once: the
@@ -178,19 +178,27 @@ go through the cards one at a time in [flow mode](#flow-mode).
 
 | Action | What it does |
 | --- | --- |
-| **Interesting** | Bookmarks the repository, with the comment you typed in the field beside it (optional, up to 500 characters), and hides it for good |
+| **Interesting** | Bookmarks the repository, with the comment you typed in the field beside it (optional, up to 500 characters), and hides it |
 | **Skip** | Marks the repository as seen and hides it for three months |
-| **Mark all shown as seen** | Marks every repository the page shows at that moment as seen, for three months |
+| **Take back** | Removes the answer the repository has: it is new again |
+| **Mark all shown as seen** | Marks every repository the page shows at that moment as seen, for three months; **Undo** beside its message takes those marks back, except for a repository you answered since |
 
-Only these three actions mark a repository: opening the page, the reader,
-**Show hidden**, **Flow**, **Refresh** and an export mark nothing. A card
-leaves the page once its mark is written to disk; if it cannot be written,
-the reader stays on the repository and shows the error.
+Only these actions mark a repository: opening the page, the reader,
+**Show hidden**, **Flow**, **Queue**, **Refresh** and an export mark
+nothing. A card leaves the page once its mark is written to disk; if it
+cannot be written, the reader stays on the repository and shows the error.
+
+Your last answer counts. **Skip** after **Interesting** removes the bookmark,
+**Interesting** after **Skip** ends the snooze, and **Take back** removes
+either. Giving the answer a repository already has writes nothing: a second
+**Skip** does not move the end of the snooze, and **Interesting** with
+another comment replaces the comment.
 
 A seen mark is a snooze. When the three months are over and the repository
-trends again, it is back on the page and you decide anew; a new **Skip**
-hides it for another three months from then. A repository you bookmarked, in
-pulse or in your notes vault, stays hidden whatever its marks.
+trends again, it is back on the page and you decide anew; the reader says
+when you skipped it, and a new **Skip** hides it for another three months
+from then. A repository stays hidden while **Interesting** is its answer, or
+while a note of your vault names it.
 [The config file](#choose-how-long-a-skip-lasts) sets another period.
 
 ### The reader
@@ -204,7 +212,9 @@ leaving the page. The reader opens beside the paper and shows:
 - the README as GitHub renders it. Its links open in a new tab.
 
 The reader has the comment field, **Interesting** and **Skip**; after
-either it moves to the next repository. **Next** and
+either it moves to the next repository. A repository that has an answer
+shows it as a stamp, such as `★ Interesting` or `Skipped · until Feb 19,
+2027`; its answer is pressed, and **Take back** removes it. **Next** and
 **Previous**, or `j` and `k`, move between repositories, and `Esc` closes
 the reader.
 
@@ -236,9 +246,16 @@ lists know, with the actions.
 
 ### Hidden repositories
 
-**Show hidden** adds the hidden repositories below the new ones, each with
-the reasons it is hidden. It is a page of its own,
-`http://pulse.localhost:17842/hidden/`; the switch moves between the two.
+**Show hidden** adds the hidden repositories below the new ones, grouped by
+where they stand, each with a stamp and the reasons it is hidden. It is a
+page of its own, `http://pulse.localhost:17842/hidden/`; the switch moves
+between the two.
+
+| Group | Stamp on the card | What holds it there |
+| --- | --- | --- |
+| **Interesting** | `★ Interesting` | Your answer is **Interesting**, and no note names it yet |
+| **Skipped** | `Skipped · until Feb 19, 2027`, or `Seen · until Feb 19, 2027` after **Mark all shown as seen** | Its snooze runs |
+| **In your notes** | `In your notes` | A note of your bookmarks directory names it, whatever your answer in pulse |
 
 | Reason on the card | Meaning |
 | --- | --- |
@@ -248,9 +265,24 @@ the reasons it is hidden. It is a page of its own,
 | `Bookmarked in pulse:` and the comment, or `Bookmarked in pulse, without a comment` | It has a pulse bookmark |
 | `In the vault: cobra.md` | The named note of your bookmarks directory names it |
 
-The reader of a hidden repository keeps its comment field. **Interesting**
-bookmarks a repository you had only marked as seen or keep in your notes,
-and **Save comment** replaces the comment of a bookmark.
+In the reader of a hidden repository, **Interesting** replaces a skip,
+**Skip** replaces a bookmark, **Save comment** replaces the comment of a
+bookmark, and **Take back** makes the repository new again. The card then
+moves to its group, and the reader stays on it.
+
+A repository that a note names offers neither **Interesting** nor **Skip**:
+it is in your notes already. When pulse holds an answer for it too, **Take
+back** removes that answer; the note stays.
+
+### The queue
+
+**Queue**, at `http://pulse.localhost:17842/queue/`, lists the repositories
+whose answer is **Interesting** and that no note of your vault names yet,
+oldest first, also the ones that left the lists. It is the list
+[`pulsectl bookmarks`](#export-the-bookmarks) prints: what is still waiting
+for a note. Click a repository to open it in the reader; **Take back** on a
+repository removes it from the queue. When the vault cannot be read, the
+queue says so and lists every bookmark.
 
 ### Past days
 
@@ -284,8 +316,9 @@ today's page.
 
 ### Flow mode
 
-**Flow** goes through the new repositories one card at a time, with the
-answers always in the same place at the bottom of the screen:
+**Flow** goes through the new repositories one card at a time. Each card is
+the whole story of its repository, as the [reader](#the-reader) shows it,
+and the answers are always in the same place at the bottom of the screen:
 
 ```text
   ← THE PAPER          SUNDAY, NOVEMBER 22, 2026          3 OF 28 · 26 LEFT
@@ -294,10 +327,14 @@ answers always in the same place at the bottom of the screen:
   Tencent
   LoopForge
   Self-hosted workflows for coding-agent delivery.
+  5,109 STARS   708 FORKS   12 OPEN ISSUES   MIT   JULY 2026 SINCE
+  agents · workflows · self-hosted
   ○ trendshift daily #1   ■ github weekly #7
+  github.com/Tencent/LoopForge
+  ┌ README ──────────────────────────────────────────────────────┐
 
-  Why it is interesting (optional)
-  [ ← SKIP ]            [ ↓ LATER ]            [ INTERESTING → ]
+  [ ← SKIP ]       [ ↓ LATER ]       [ ↑ BACK ]       [ INTERESTING → ]
+                      COMMENT  C        TAKE BACK  U
 ```
 
 | Answer | Keys and gestures | What it does |
@@ -305,18 +342,26 @@ answers always in the same place at the bottom of the screen:
 | **Skip** | `←`, or swipe left | Marks the repository as seen, as **Skip** on the page |
 | **Interesting** | `→`, or swipe right; `Enter` in the comment field | Bookmarks it with the comment, as **Interesting** on the page |
 | **Later** | `↓` | Marks nothing and shows the next card |
+| **Back** | `↑` | Shows the previous card of this flow, with the answer it got |
+| **Comment** | `c` | Opens the comment field for **Interesting**; `Esc` closes it |
+| **Take back** | `u` | Removes the answer of the card on the screen: it is new again and stays |
 
 The flow holds the cards the page shows, in the order of the page; hidden
 repositories are not in it. The next card appears once the answer is written
 to disk; if it cannot be written, the card stays with the error. A card left
-for later stays on the page and is in the next flow. To use the arrows after
-typing a comment, press `Esc` to leave the field. A click on the name opens
-the reader, and `Esc` brings you back to the same card. When no card is left,
-the flow says so and links back to the page.
+for later stays on the page and is in the next flow. The README scrolls with
+the mouse or the trackpad, and a click into it leaves the arrows to the
+flow; to copy text of the README, open it on GitHub.
+
+**Back** walks the cards of this flow backwards, also those left for later.
+A card you answered shows its stamp, its answer pressed and its comment;
+another answer replaces it, the same one writes nothing, and `u` takes it
+back. The way back lasts as long as
+the flow is open: a reload starts a new flow. When no card is left, the flow
+says so, links back to the page, and `↑` returns to the last card.
 
 The flow of today is at `http://pulse.localhost:17842/flow/`, the flow of a
-past day at `/days/YYYY-MM-DD/flow/`. It has no **Mark all shown as seen**,
-and an answer cannot be taken back.
+past day at `/days/YYYY-MM-DD/flow/`. It has no **Mark all shown as seen**.
 
 ### Loading and errors
 
@@ -338,8 +383,10 @@ loaded**.
 
 ## Export the bookmarks
 
-`pulsectl bookmarks` asks the running service and prints the bookmarks,
-oldest first, one URL per line:
+`pulsectl bookmarks` asks the running service and prints the repositories
+whose answer is **Interesting** and that no note of your vault names yet,
+oldest first, one URL per line: the [queue](#the-queue), ready for the tool
+that writes your notes. Once a note names a repository, it leaves the list.
 
 ```sh
 pulsectl bookmarks
@@ -348,6 +395,11 @@ pulsectl bookmarks
 ```text
 https://github.com/firecrawl/firecrawl
 ```
+
+With `--all` it prints every bookmark, also those a note names. When the
+vault, or one of its notes, cannot be read, `pulsectl bookmarks` fails and
+says why, instead of printing repositories that may have a note already;
+`--all` still works.
 
 With `--format jsonl` it prints one JSON object per line, with the comment,
 the time of the bookmark in UTC and the lists the repository was in when you
@@ -391,12 +443,15 @@ when it is not there, and the bookmarks directory is only read.
   `pulse` in a terminal, or under a service manager of your own.
 - Opening the page loads a list at most once an hour, and a failed attempt
   counts: use **Refresh** to load sooner.
-- A seen mark cannot be taken back or extended; one period applies to every
-  repository.
+- A snooze cannot be extended: a second **Skip** keeps the end of the first.
+  One period applies to every repository.
 - The loads of the lists are kept without expiry. The calendar shows whole
   days: not a single load within a day, and no day before the first load.
-- A bookmark cannot be deleted from the page; only its comment can be
-  replaced.
+- **Take back** removes a bookmark from pulse only; a note in your vault
+  stays. **Undo** of **Mark all shown as seen** lasts until you leave the
+  page or load it again yourself.
+- Once an answer is taken back, an older pulse cannot open the data
+  directory: it does not know that record.
 - The six lists are fixed. A renamed or transferred repository is a new one.
 - pulse does not write to your bookmark notes: `pulsectl bookmarks` is the
   way to take the bookmarks out.

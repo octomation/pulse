@@ -1,0 +1,46 @@
+{{- define "queue"}}<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>{{if .Cards}}({{len .Cards}}) {{end}}Queue · pulse</title>
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/assets/app.css">
+<script src="/assets/app.js" defer></script>
+</head>
+<body class="is-queue" data-view="queue" data-base="/">
+
+<header class="flow-head">
+  <a class="flow-back" href="/">← The paper</a>
+  <span class="flow-count" aria-live="polite"><b data-count="queue">{{len .Cards}}</b> in the queue</span>
+</header>
+<p class="queue-note">Marked as interesting, and no note of the vault names them yet: <code>pulsectl bookmarks</code> prints the same list, oldest first.</p>
+{{- with .Problem}}
+<p class="problem" role="alert">{{.}}</p>
+{{- end}}
+<p class="notice" id="notice" role="alert" hidden></p>
+
+<main>
+  {{- if .Cards}}
+  <div class="cards queue" id="hidden">
+    {{- range .Cards}}
+    <div class="queue-item" data-repo="{{.Key}}" data-name="{{.Repo}}">
+      {{- template "card" .}}
+      <p class="queue-actions"><button type="button" class="button" data-action="clear" title="Take back the interest: the repository is new again">Take back</button></p>
+      <p class="card-error" role="alert" hidden></p>
+    </div>
+    {{- end}}
+  </div>
+  {{- else}}
+  <section class="empty is-clear" data-empty="queue">
+    <h2>The queue is empty</h2>
+    <p>Every repository marked as interesting has a note, or none is marked yet.</p>
+  </section>
+  {{- end}}
+</main>
+{{template "reader-panel"}}
+
+</body>
+</html>
+{{- end}}

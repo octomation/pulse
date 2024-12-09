@@ -141,11 +141,33 @@ func TestBookmarks(t *testing.T) {
 		mark(morning.Add(4*time.Minute), Interesting, "Ollama/Ollama", "second", "github/daily"),
 	))
 
-	// The latest comment, at the place and the time of the first mark.
+	// The last answer counts: the seen mark ended the first bookmark of
+	// ollama, and the next Interesting starts another one.
 	assert.Equal(t, []Bookmark{
-		{Repo: trend.Repo{Owner: "ollama", Name: "ollama"}, Comment: "second", At: morning, Lists: []string{"trendshift/daily"}},
 		{Repo: trend.Repo{Owner: "astral-sh", Name: "uv"}, At: morning.Add(2 * time.Minute), Lists: []string{}},
+		{Repo: trend.Repo{Owner: "Ollama", Name: "Ollama"}, Comment: "second", At: morning.Add(4 * time.Minute), Lists: []string{"github/daily"}},
 	}, s.Bookmarks())
+
+	// Interesting again keeps the place and the time of the first mark of
+	// the run, with the latest comment; Clear takes the answer back.
+	require.NoError(t, s.AppendMarks(
+		mark(morning.Add(5*time.Minute), Interesting, "astral-sh/uv", "the fast one", "github/weekly"),
+		mark(morning.Add(6*time.Minute), Clear, "ollama/ollama", ""),
+	))
+	assert.Equal(t, []Bookmark{
+		{Repo: trend.Repo{Owner: "astral-sh", Name: "uv"}, Comment: "the fast one", At: morning.Add(2 * time.Minute), Lists: []string{}},
+	}, s.Bookmarks())
+	assert.Equal(t, []Standing{
+		{Repo: trend.Repo{Owner: "golang", Name: "go"}, Action: Skip, At: morning.Add(time.Minute), Lists: []string{}, Line: 1},
+		{Repo: trend.Repo{Owner: "astral-sh", Name: "uv"}, Action: Interesting, Comment: "the fast one", At: morning.Add(2 * time.Minute), Lists: []string{}, Line: 2},
+	}, s.Standings())
+
+	// A record of Clear survives a restart, and an older pulse would refuse
+	// it: it is a fourth action.
+	again, err := Open(s.Dir())
+	require.NoError(t, err)
+	assert.Equal(t, s.Standings(), again.Standings())
+	assert.True(t, Clear.Valid())
 }
 
 func TestCorruptRecordIsAnErrorThatNamesFileAndLine(t *testing.T) {

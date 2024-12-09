@@ -246,21 +246,40 @@ try {
   const written = markLines().slice(before)
   check(left === 8 && written.length === left && written.every((line) => line.action === 'seen'), 'Mark all shown as seen clears the page')
 
-  // In the hidden view an answer replaces the hidden card in place.
+  check(await page.locator('#notice [data-action="undo-seen"]').isVisible(), 'and offers Undo')
+  await page.locator('#notice [data-action="undo-seen"]').click()
+  await page.waitForFunction((count) => document.querySelectorAll('#shown .card').length === count, left)
+  check(markLines().slice(before + left).length === left && markLines().slice(before + left).every((line) => line.action === 'clear'),
+    'Undo takes back exactly the marks it wrote')
+  await page.locator('[data-action="seen-all"]').click()
+  await page.waitForFunction(() => !document.querySelector('#shown .card'))
+
+  // In the hidden view an answer moves the card to its group, and the
+  // reader stays on it with its new answer.
   await page.goto(`${origin}/hidden/`)
-  const around = () => page.evaluate(() => {
-    const card = document.querySelector('#hidden [data-repo="week/one"]')
-    return [card.parentNode.id, card.previousElementSibling?.dataset.repo ?? '', card.nextElementSibling?.dataset.repo ?? '']
-  })
-  const place = await around()
+  check(await page.locator('[data-group="skipped"] [data-repo="week/one"] [data-stamp="seen"]').count() === 1,
+    'the hidden view groups the cards under their stamps')
   await page.locator('#hidden [data-repo="week/one"] [data-action="read"]').first().click()
   await page.locator('#reader:not([hidden]) .story[data-repo="week/one"]').waitFor()
   await page.fill('#reader [name="comment"]', 'kept from the hidden view')
   await page.locator('#reader [data-action="interesting"]').click()
-  await page.waitForFunction(() => document.querySelector('#hidden [data-repo="week/one"]')?.textContent.includes('kept from the hidden view'))
-  check(JSON.stringify(await around()) === JSON.stringify(place) && await page.locator('#hidden [data-repo="week/one"]').count() === 1 &&
-    await page.locator('#hidden [data-repo="week/one"] button, #hidden [data-repo="week/one"] input').count() === 0,
-  'in the hidden view an answer replaces the card in place, still without answers')
+  await page.locator('#reader:not([hidden]) .story[data-repo="week/one"] [data-stamp="interesting"]').waitFor()
+  const moved = page.locator('[data-group="interesting"] [data-repo="week/one"]')
+  check(await moved.count() === 1 && (await moved.textContent()).includes('kept from the hidden view') &&
+    await moved.locator('button, input').count() === 0,
+  'an answer in the hidden view moves the card to its group, still without answers, and the reader stays on it')
+  await page.locator('#reader [data-action="clear"]').click()
+  await page.locator('#shown [data-repo="week/one"]').waitFor()
+  check(markLines().at(-1)?.action === 'clear' && markLines().at(-1)?.repo.name === 'one', 'Take back makes it new again')
+
+  // The queue lists the interest without a note, and takes it back in one
+  // click.
+  await page.goto(`${origin}/queue/`)
+  const queued = page.locator('.queue-item[data-repo="third/story"]')
+  check(await queued.count() === 1 && (await queued.textContent()).includes('from the reader'), 'the queue lists a bookmark with its comment')
+  await queued.locator('[data-action="clear"]').click()
+  await page.waitForFunction(() => !document.querySelector('.queue-item[data-repo="third/story"]'))
+  check(markLines().at(-1)?.action === 'clear' && markLines().at(-1)?.repo.name === 'story', 'Take back in the queue removes it')
 
   // Answering the lead of a past day of five leaves four on its front page,
   // the first three a plain row: side by side, at one top, without a rule.

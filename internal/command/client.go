@@ -43,11 +43,15 @@ func NewClient() *cobra.Command {
 
 func newBookmarks() *cobra.Command {
 	var format, addr string
+	var all bool
 	command := cobra.Command{
 		Use:   "bookmarks",
-		Short: "print the repositories marked as interesting",
+		Short: "print the repositories marked as interesting that have no note yet",
 		Long: "Prints the pulse bookmarks, oldest first: the repositories marked as\n" +
-			"\"Interesting\" on the page of the running service.\n" +
+			"\"Interesting\" on the page of the running service that no note of the\n" +
+			"vault names yet. With --all it prints every bookmark, also those with a\n" +
+			"note. When the vault cannot be read, it fails instead of printing what may\n" +
+			"already have a note.\n" +
 			"\n" +
 			"With --format urls, the default, it prints https://github.com/owner/name, one\n" +
 			"per line, as copied from a Safari tab group. With --format jsonl it prints one\n" +
@@ -57,6 +61,7 @@ func newBookmarks() *cobra.Command {
 			"It reads from the service and changes nothing. Without a running service it\n" +
 			"fails and says so.",
 		Example: "  pulsectl bookmarks\n" +
+			"  pulsectl bookmarks --all\n" +
 			"  pulsectl bookmarks --format jsonl",
 
 		Args: cobra.NoArgs,
@@ -70,7 +75,11 @@ func newBookmarks() *cobra.Command {
 				return fmt.Errorf("--addr %w", err)
 			}
 			base.Path = "/api/bookmarks"
-			base.RawQuery = url.Values{"format": {format}}.Encode()
+			query := url.Values{"format": {format}}
+			if all {
+				query.Set("all", "true")
+			}
+			base.RawQuery = query.Encode()
 
 			ctx, cancel := context.WithTimeout(cmd.Context(), 15*time.Second)
 			defer cancel()
@@ -106,6 +115,7 @@ func newBookmarks() *cobra.Command {
 	}
 	flags := command.Flags()
 	flags.StringVar(&format, "format", web.FormatURLs, "output format: "+web.FormatURLs+" or "+web.FormatJSONL)
+	flags.BoolVar(&all, "all", false, "print every bookmark, also those a note of the vault names")
 	flags.StringVar(&addr, "addr", strings.TrimSuffix(web.URL(config.Port), "/"), "address of the running service")
 	return &command
 }

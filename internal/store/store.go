@@ -34,7 +34,7 @@ const (
 // without the colons a file name should not have.
 const snapshotName = "2006-01-02T15-04-05.000Z"
 
-// Action is how a repository was marked as seen.
+// Action is the answer a mark records for a repository.
 type Action string
 
 // The actions of the page.
@@ -45,21 +45,23 @@ const (
 	Skip Action = "skip"
 	// Seen is the mark of "Mark all shown as seen".
 	Seen Action = "seen"
+	// Clear takes back the answer the repository had: it is new again.
+	Clear Action = "clear"
 )
 
-// Valid reports whether the action is one of the three.
+// Valid reports whether the action is one of the four.
 func (a Action) Valid() bool {
 	switch a {
-	case Interesting, Skip, Seen:
+	case Interesting, Skip, Seen, Clear:
 		return true
 	default:
 		return false
 	}
 }
 
-// Mark is one record of marks.jsonl. A mark of any action makes its
-// repository seen; an Interesting one is also its bookmark, so a bookmark
-// and its seen mark cannot exist without each other.
+// Mark is one record of marks.jsonl. The last mark of a repository, in the
+// order of the file, is its answer: Interesting bookmarks it, Skip and Seen
+// snooze it, Clear takes the answer back. See Standings.
 type Mark struct {
 	Time    time.Time  `json:"time"`
 	Repo    trend.Repo `json:"repo"`
@@ -77,8 +79,8 @@ type Attempt struct {
 	Error string    `json:"error,omitempty"`
 }
 
-// Bookmark is a repository marked as interesting: the first time it was, the
-// lists it was in then, and the comment of the latest mark.
+// Bookmark is a repository whose answer is Interesting: the first mark of
+// that answer, the lists it was in then, and the comment of the latest one.
 type Bookmark struct {
 	Repo    trend.Repo
 	Comment string
@@ -270,6 +272,14 @@ func (s *Store) AppendMarks(marks ...Mark) error {
 	return nil
 }
 
+// Len returns the number of marks: the place the next one takes in
+// marks.jsonl.
+func (s *Store) Len() int {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return len(s.marks)
+}
+
 // Marks returns every mark, oldest first.
 func (s *Store) Marks() []Mark {
 	s.mu.RLock()
@@ -277,29 +287,73 @@ func (s *Store) Marks() []Mark {
 	return slices.Clone(s.marks)
 }
 
-// Bookmarks returns the bookmarks, oldest first.
+// Bookmarks returns the repositories whose answer is Interesting, oldest
+// first.
 func (s *Store) Bookmarks() []Bookmark {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	return bookmarks(s.marks)
+	var list []Bookmark
+	for _, standing := range standings(s.marks) {
+		if standing.Action == Interesting {
+			list = append(list, Bookmark{
+				Repo: standing.Repo, Comment: standing.Comment, At: standing.At, Lists: slices.Clone(standing.Lists),
+			})
+		}
+	}
+	return list
 }
 
-func bookmarks(marks []Mark) []Bookmark {
-	var list []Bookmark
-	index := map[string]int{}
-	for _, mark := range marks {
-		if mark.Action != Interesting {
-			continue
-		}
+// Standing is the answer a repository has: the action of its last mark.
+// Interesting runs on: a repeated Interesting keeps the time and the lists
+// of the first one and takes the comment of the latest. Skip and Seen count
+// from their own time, which starts a snooze.
+type Standing struct {
+	Repo    trend.Repo
+	Action  Action
+	At      time.Time
+	Comment string
+	Lists   []string
+	// Line is the place of the mark that started the answer in marks.jsonl,
+	// from 0: it tells this answer from a later one of the same action.
+	Line int
+}
+
+// Standings returns the answer of every repository that has one, ordered
+// by the time of the answer: a repository whose last mark is Clear has none.
+func (s *Store) Standings() []Standing {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return standings(s.marks)
+}
+
+// standings folds the marks in the order of the file, which is the order
+// they were made in: the clock of a mark has seconds only.
+func standings(marks []Mark) []Standing {
+	current := map[string]*Standing{}
+	var order []*Standing
+	for line, mark := range marks {
 		key := mark.Repo.Key()
-		if i, found := index[key]; found {
-			list[i].Comment = mark.Comment
+		previous := current[key]
+		switch {
+		case mark.Action == Clear:
+			delete(current, key)
+			continue
+		case previous != nil && previous.Action == Interesting && mark.Action == Interesting:
+			previous.Comment = mark.Comment
 			continue
 		}
-		index[key] = len(list)
-		list = append(list, Bookmark{
-			Repo: mark.Repo, Comment: mark.Comment, At: mark.Time, Lists: slices.Clone(mark.Lists),
-		})
+		next := &Standing{Repo: mark.Repo, Action: mark.Action, At: mark.Time, Lists: slices.Clone(mark.Lists), Line: line}
+		if mark.Action == Interesting {
+			next.Comment = mark.Comment
+		}
+		current[key] = next
+		order = append(order, next)
+	}
+	list := make([]Standing, 0, len(current))
+	for _, standing := range order {
+		if current[standing.Repo.Key()] == standing {
+			list = append(list, *standing)
+		}
 	}
 	return list
 }

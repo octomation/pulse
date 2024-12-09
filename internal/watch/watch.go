@@ -68,6 +68,10 @@ type Service struct {
 	now      func() time.Time
 	timeout  time.Duration
 
+	// marking serializes the marks, so that an answer is checked against the
+	// one the repository has and written in one step.
+	marking sync.Mutex
+
 	// loading serializes the loads: a second page waits for the first and
 	// then finds the lists fresh.
 	loading sync.Mutex
@@ -298,33 +302,67 @@ type Scope struct {
 	From, To time.Time
 }
 
-// Mark records "Interesting" or "Skip" for a repository, on the page of the
-// scope: "Interesting" bookmarks it with the comment, "Skip" snoozes it.
-// The mark names the lists the repository is in on that page. The record is
-// on disk when Mark returns nil; when it cannot be written, Mark fails and
-// the repository stays as it was. It loads nothing.
+// Mark records an answer for a repository, on the page of the scope:
+// "Interesting" bookmarks it with the comment, "Skip" snoozes it, "Clear"
+// takes back the answer it has, so that it is new again. The last answer
+// counts. An answer the repository already has writes nothing: a second
+// Skip does not extend the snooze, and Interesting writes only another
+// comment. The mark names the lists the repository is in on that page. The
+// record is on disk when Mark returns nil; when it cannot be written, Mark
+// fails and the repository stays as it was. It loads nothing.
 func (s *Service) Mark(action store.Action, repo trend.Repo, comment string, scope Scope) error {
 	switch {
-	case action != store.Interesting && action != store.Skip:
-		return fmt.Errorf("%w: the action is %q, want interesting or skip", ErrInvalid, action)
+	case action != store.Interesting && action != store.Skip && action != store.Clear:
+		return fmt.Errorf("%w: the action is %q, want interesting, skip or clear", ErrInvalid, action)
 	case len(comment) > MaxComment:
 		return fmt.Errorf("%w: the comment is longer than %d bytes", ErrInvalid, MaxComment)
 	}
-	if action == store.Skip {
+	if action != store.Interesting {
 		comment = ""
+	}
+	s.marking.Lock()
+	defer s.marking.Unlock()
+	now := s.clock()
+	m := s.marks(now)
+	key := repo.Key()
+	switch action {
+	case store.Interesting:
+		if bookmark := m.bookmarks[key]; bookmark != nil && bookmark.Comment == comment {
+			return nil
+		}
+	case store.Skip:
+		if seen := m.seen[key]; seen != nil && seen.Action != store.Interesting {
+			return nil
+		}
+	case store.Clear:
+		if m.seen[key] == nil {
+			return nil
+		}
+	case store.Seen:
+		// Refused above: "Mark all shown as seen" is MarkSeen.
 	}
 	current, err := s.memberships(scope)
 	if err != nil {
 		return err
 	}
-	return s.store.AppendMarks(newMark(s.clock(), action, repo, comment, current))
+	return s.store.AppendMarks(newMark(now, action, repo, comment, current))
+}
+
+// Batch is what "Mark all shown as seen" wrote: the repositories, and the
+// place of its first mark in marks.jsonl. Its marks are one block from
+// there, which tells them from any later mark.
+type Batch struct {
+	Repos []trend.Repo
+	From  int
 }
 
 // MarkSeen records "Mark all shown as seen" for exactly the repositories the
 // page of the scope showed: one write for all of them. A repository that the
-// marks hide already gets no second mark. It loads nothing and returns the
-// number it marked.
-func (s *Service) MarkSeen(repos []trend.Repo, scope Scope) (int, error) {
+// marks hide already gets no second mark. It loads nothing and returns what
+// it wrote, for UndoSeen.
+func (s *Service) MarkSeen(repos []trend.Repo, scope Scope) (Batch, error) {
+	s.marking.Lock()
+	defer s.marking.Unlock()
 	now := s.clock()
 	seen := map[string]bool{}
 	for key := range s.marks(now).seen {
@@ -332,15 +370,58 @@ func (s *Service) MarkSeen(repos []trend.Repo, scope Scope) (int, error) {
 	}
 	current, err := s.memberships(scope)
 	if err != nil {
-		return 0, err
+		return Batch{}, err
 	}
 	var marks []store.Mark
+	batch := Batch{From: s.store.Len()}
 	for _, repo := range repos {
 		if seen[repo.Key()] {
 			continue
 		}
 		seen[repo.Key()] = true
-		marks = append(marks, newMark(now, store.Seen, repo, "", current))
+		mark := newMark(now, store.Seen, repo, "", current)
+		marks = append(marks, mark)
+		batch.Repos = append(batch.Repos, mark.Repo)
+	}
+	if err := s.store.AppendMarks(marks...); err != nil {
+		return Batch{}, err
+	}
+	return batch, nil
+}
+
+// UndoSeen takes back a "Mark all shown as seen": one write for the
+// repositories of the batch whose answer is still its mark. A repository
+// answered since keeps its answer, also when that answer is a later "Mark
+// all shown as seen". It returns the number it took back.
+func (s *Service) UndoSeen(batch Batch, scope Scope) (int, error) {
+	s.marking.Lock()
+	defer s.marking.Unlock()
+	// The batch is one block of marks: as many as its repositories, each
+	// once, within the file.
+	unique := map[string]bool{}
+	for _, repo := range batch.Repos {
+		unique[repo.Key()] = true
+	}
+	if batch.From < 0 || batch.From+len(unique) > s.store.Len() {
+		return 0, fmt.Errorf("%w: the batch from %d of %d repositories is not in the marks", ErrInvalid, batch.From, len(unique))
+	}
+	now := s.clock()
+	m := s.marks(now)
+	current, err := s.memberships(scope)
+	if err != nil {
+		return 0, err
+	}
+	var marks []store.Mark
+	done := map[string]bool{}
+	for _, repo := range batch.Repos {
+		key := repo.Key()
+		seen := m.seen[key]
+		if seen == nil || seen.Action != store.Seen || done[key] ||
+			seen.Line < batch.From || seen.Line >= batch.From+len(unique) {
+			continue
+		}
+		done[key] = true
+		marks = append(marks, newMark(now, store.Clear, repo, "", current))
 	}
 	if err := s.store.AppendMarks(marks...); err != nil {
 		return 0, err
@@ -353,6 +434,59 @@ var ErrInvalid = errors.New("invalid request")
 
 // Bookmarks returns the bookmarks, oldest first.
 func (s *Service) Bookmarks() []store.Bookmark { return s.store.Bookmarks() }
+
+// Pending returns the bookmarks that no source holds yet, such as a note of
+// the vault, oldest first: the interest that has no note. When a source
+// cannot be read, Pending fails: it cannot tell which ones have a note.
+func (s *Service) Pending(ctx context.Context) ([]store.Bookmark, error) {
+	bookmarks := s.store.Bookmarks()
+	items := make([]hide.Item, len(bookmarks))
+	for i, bookmark := range bookmarks {
+		items[i] = hide.Item{Repo: bookmark.Repo}
+	}
+	reasons, statuses := s.hide.Check(ctx, items)
+	for _, status := range statuses {
+		switch {
+		case status.State == hide.Failed:
+			return nil, fmt.Errorf("the %s could not be read: %s", status.Source, status.Error)
+		case len(status.Broken) > 0:
+			// A note that could not be read may name a bookmark.
+			return nil, fmt.Errorf("%d %s of the %s could not be read, %s",
+				len(status.Broken), pick(len(status.Broken) == 1, "note", "notes"), status.Source, strings.Join(status.Broken, ", "))
+		}
+	}
+	pending := make([]store.Bookmark, 0, len(bookmarks))
+	for i, bookmark := range bookmarks {
+		if len(reasons[i]) == 0 {
+			pending = append(pending, bookmark)
+		}
+	}
+	return pending, nil
+}
+
+// Lookup returns the card of any repository as the marks and the sources
+// see it now, whether the lists have it or not: it has no lists then.
+func (s *Service) Lookup(ctx context.Context, repo trend.Repo) Card {
+	return s.LookupAll(ctx, []trend.Repo{repo})[0]
+}
+
+// LookupAll returns the cards of the repositories as Lookup does, asking
+// the sources once for all of them.
+func (s *Service) LookupAll(ctx context.Context, repos []trend.Repo) []Card {
+	m := s.marks(s.now())
+	items := make([]hide.Item, len(repos))
+	cards := make([]Card, len(repos))
+	for i, repo := range repos {
+		key := repo.Key()
+		items[i] = hide.Item{Repo: repo}
+		cards[i] = Card{Repo: repo, Seen: m.seen[key], Bookmark: m.bookmarks[key], Lapsed: m.lapsed[key]}
+	}
+	reasons, _ := s.hide.Check(ctx, items)
+	for i := range cards {
+		cards[i].Reasons = reasons[i]
+	}
+	return cards
+}
 
 // membership is where a repository is in the latest snapshots.
 type membership struct {
@@ -391,4 +525,11 @@ func newMark(now time.Time, action store.Action, repo trend.Repo, comment string
 		}
 	}
 	return mark
+}
+
+func pick(one bool, single, many string) string {
+	if one {
+		return single
+	}
+	return many
 }

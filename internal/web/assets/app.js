@@ -5,6 +5,9 @@
   'use strict';
 
   var showsHidden = document.body.dataset.view === 'hidden';
+  // The hidden view and the queue group the cards by their answer: a page
+  // whose card changes its answer loads again, with the reader on it.
+  var regroups = showsHidden || document.body.dataset.view === 'queue';
   // base is the path of the day of the page, day its date when it is a past
   // day: the marks of the page are made on that day.
   var base = document.body.dataset.base || '/';
@@ -24,6 +27,12 @@
   // reading is the key of the repository in the reader.
   var reading = null;
   var asked = 0;
+  // receipt is what the last "Mark all shown as seen" of this page wrote,
+  // for its Undo: the repositories and the batch. It lives with the page,
+  // and passes through the reloads the page makes itself, not through one
+  // made by hand.
+  var receipt = null;
+  var receiptKey = 'pulse.seen.' + window.location.pathname;
 
   // post sends JSON to the API and resolves with its answer, or rejects with
   // the reason the service gave.
@@ -73,14 +82,17 @@
   // this page knows of, the page is loaded again.
   function update(answer) {
     if (answer.reload) {
-      window.location.reload();
+      reload();
+      return;
+    }
+    if (!shown) {
       return;
     }
     document.querySelector('[data-count="new"]').textContent = answer.new;
     document.querySelector('[data-count="hidden"]').textContent = answer.hidden;
     var left = shownCards().length;
     if (left === 0 && !answer.empty) {
-      window.location.reload();
+      reload();
       return;
     }
     empty.innerHTML = left === 0 ? answer.empty : '';
@@ -88,8 +100,47 @@
     document.title = (left > 0 ? '(' + left + ') ' : '') + 'pulse · trend-watch';
   }
 
-  function say(text) {
+  // remember keeps the receipt of "Mark all shown as seen" for its Undo.
+  function remember(answer) {
+    receipt = answer.repos && answer.repos.length && typeof answer.batch === 'number' ? { repos: answer.repos, batch: answer.batch } : null;
+  }
+
+  // reload loads the page again, and hands the receipt to it.
+  function reload() {
+    try {
+      if (receipt) {
+        window.sessionStorage.setItem(receiptKey, JSON.stringify(receipt));
+      }
+    } catch (e) {
+      // Without the storage of the session, Undo ends with this page.
+    }
+    window.location.reload();
+  }
+
+  // offer says what "Mark all shown as seen" marked, with its Undo.
+  function offer() {
+    if (!receipt) {
+      return;
+    }
+    var n = receipt.repos.length;
+    say('Marked ' + n + (n === 1 ? ' repository' : ' repositories') + ' as seen.', true);
+  }
+
+  // say puts a line in the notice. While a receipt of "Mark all shown as
+  // seen" is kept, its Undo stays beside any line, an error too; info says
+  // that the line is not an error.
+  function say(text, info) {
     notice.textContent = text;
+    notice.classList.toggle('is-info', !!info);
+    if (text && receipt) {
+      var button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'button';
+      button.dataset.action = 'undo-seen';
+      button.textContent = 'Undo';
+      notice.appendChild(document.createTextNode(' '));
+      notice.appendChild(button);
+    }
     notice.hidden = !text;
   }
 
@@ -106,33 +157,26 @@
     });
   }
 
-  // mark sends "Interesting" or "Skip" from the reader. The card leaves the
-  // paper; in the hidden view it moves to the hidden ones,
-  // as the service renders it now. The reader moves to the next repository.
+  // mark sends "Interesting", "Skip" or "Take back" from the reader. On the
+  // paper the card leaves and the reader moves to the next repository; the
+  // hidden view and the queue load again with the reader on the same one, so
+  // that it shows the new answer in its place.
   function mark(holder, action) {
     var key = holder.dataset.repo;
     var inReader = readerBody.contains(holder);
-    var comment = holder.querySelector('[name="comment"]').value;
+    var field = holder.querySelector('[name="comment"]');
+    var comment = action === 'interesting' && field ? field.value : '';
     fail(holder, '');
     busy(holder, true);
     post('/api/marks', { action: action, repo: holder.dataset.name, comment: comment }).then(function (answer) {
+      if (regroups) {
+        reload();
+        return;
+      }
       var card = cardOf(key);
       var after = inReader ? neighbour(key, 1) : null;
-      var next = null;
-      if (showsHidden && hidden && answer.card) {
-        var template = document.createElement('template');
-        template.innerHTML = answer.card.trim();
-        next = template.content.firstElementChild;
-      }
-      if (card && next && card.parentNode === hidden) {
-        hidden.replaceChild(next, card);
-      } else {
-        if (card) {
-          card.remove();
-        }
-        if (next) {
-          hidden.insertBefore(next, hidden.firstChild);
-        }
+      if (card) {
+        card.remove();
       }
       update(answer);
       if (inReader) {
@@ -278,6 +322,24 @@
         mark(control.closest('[data-repo]'), 'skip');
         break;
 
+      case 'clear':
+        mark(control.closest('[data-repo]'), 'clear');
+        break;
+
+      case 'undo-seen':
+        if (!receipt) {
+          break;
+        }
+        control.disabled = true;
+        post('/api/seen', { repos: receipt.repos, batch: receipt.batch, undo: true }).then(function () {
+          receipt = null;
+          reload();
+        }, function (error) {
+          // The Undo stays beside the reason, to try again.
+          say(error.message);
+        });
+        break;
+
       case 'seen-all':
         // Exactly the cards this page shows now, not what a later load
         // would add.
@@ -285,12 +347,14 @@
         say('');
         control.disabled = true;
         post('/api/seen', { repos: marked.map(function (card) { return card.dataset.name; }) }).then(function (answer) {
+          remember(answer);
           if (showsHidden) {
-            window.location.reload();
+            reload();
             return;
           }
           marked.forEach(function (card) { card.remove(); });
           update(answer);
+          offer();
         }, function (error) {
           control.disabled = false;
           say(error.message);
@@ -302,7 +366,7 @@
         control.disabled = true;
         control.textContent = 'Refreshing…';
         post('/api/refresh', {}).then(function () {
-          window.location.reload();
+          reload();
         }, function (error) {
           control.disabled = false;
           control.textContent = 'Refresh';
@@ -333,9 +397,28 @@
   if (refresh) {
     refresh.disabled = false;
   }
-  // The address remembers the open repository across a reload.
-  var named = decodeURIComponent(window.location.hash.slice(1)).toLowerCase();
+  if (!seenAll) {
+    seenAll = { disabled: false };
+  }
+  // The receipt a reload of this page handed over, if any: read once.
+  try {
+    remember(JSON.parse(window.sessionStorage.getItem(receiptKey) || '{}') || {});
+    window.sessionStorage.removeItem(receiptKey);
+  } catch (e) {
+    receipt = null;
+  }
+  offer();
+  // The address remembers the open repository across a reload; one that
+  // left the page is forgotten.
+  var named = '';
+  try {
+    named = decodeURIComponent(window.location.hash.slice(1)).toLowerCase();
+  } catch (e) {
+    named = '';
+  }
   if (named && cardOf(named)) {
     open(named);
+  } else if (window.location.hash) {
+    history.replaceState(null, '', window.location.pathname);
   }
 })();

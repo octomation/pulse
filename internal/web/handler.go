@@ -25,7 +25,7 @@ import (
 	"go.octolab.org/toolset/pulse/internal/watch"
 )
 
-//go:embed templates/page.html templates/reader.html templates/flow.html templates/missing.html
+//go:embed templates/page.html templates/reader.html templates/flow.html templates/missing.html templates/queue.html
 //go:embed assets/app.css assets/app.js assets/flow.js assets/favicon.svg
 var files embed.FS
 
@@ -96,6 +96,7 @@ func NewHandler(o Options) (http.Handler, error) {
 	h.mux.HandleFunc("GET /days/{date}/{$}", h.index(modePage))
 	h.mux.HandleFunc("GET /days/{date}/hidden/{$}", h.index(modeHidden))
 	h.mux.HandleFunc("GET /days/{date}/flow/{$}", h.index(modeFlow))
+	h.mux.HandleFunc("GET /queue/{$}", h.queue)
 	h.mux.HandleFunc("GET /assets/{name}", h.asset)
 	h.mux.HandleFunc("GET /repos/{owner}/{name}", h.story)
 	h.mux.HandleFunc("GET /days/{date}/repos/{owner}/{name}", h.story)
@@ -302,6 +303,37 @@ func (h *handler) index(mode string) http.HandlerFunc {
 	}
 }
 
+// queue serves the queue: the repositories marked as interesting that no
+// note of the vault names yet, oldest first, also those that left the
+// lists. It loads nothing and marks nothing.
+func (h *handler) queue(w http.ResponseWriter, r *http.Request) {
+	var q queuePage
+	bookmarks, err := h.Service.Pending(r.Context())
+	if err != nil {
+		q.Problem = err.Error() + ", so the queue holds every bookmark, also those with a note"
+		bookmarks = h.Service.Bookmarks()
+	}
+	// The lists know the description of a repository they have now.
+	view := h.Service.View(r.Context())
+	repos := make([]trend.Repo, len(bookmarks))
+	for i, bookmark := range bookmarks {
+		repos[i] = bookmark.Repo
+	}
+	for _, c := range h.Service.LookupAll(r.Context(), repos) {
+		if known, found := view.Card(c.Key()); found {
+			c.Description, c.Language, c.Lists = known.Description, known.Language, known.Lists
+		}
+		q.Cards = append(q.Cards, newCard(c))
+	}
+	var buffer bytes.Buffer
+	if err := h.page.ExecuteTemplate(&buffer, "queue", q); err != nil {
+		http.Error(w, "the queue could not be rendered: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, _ = w.Write(buffer.Bytes())
+}
+
 // missing answers a path of a day that has no page: a malformed date, or a
 // day without snapshots. It links to today.
 func (h *handler) missing(w http.ResponseWriter, r *http.Request) {
@@ -351,10 +383,14 @@ func (h *handler) story(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "the snapshots of the day could not be read: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
-	s := story{card: card{Card: watch.Card{Repo: repo}, State: "shown"}}
+	var s story
 	if c, found := view.Card(repo.Key()); found {
 		// GitHub is asked for the name as the lists write it.
 		s.card, s.Known, repo = newCard(c), true, c.Repo
+	} else {
+		// A repository that left the lists, as the queue links it, still
+		// has its answer and its notes.
+		s.card = newCard(h.Service.Lookup(r.Context(), repo))
 	}
 	switch found, err := h.details(r.Context(), repo); {
 	case err != nil:
@@ -470,17 +506,19 @@ func (h *handler) mark(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, counts{Problem: "the mark is written, but the day could not be read: " + err.Error(), Reload: true})
 		return
 	}
-	answer := h.countsOf(view)
-	if card, found := view.Card(repo.Key()); found {
-		answer.Card = h.fragment("card", newCard(card))
-	}
-	writeJSON(w, http.StatusOK, answer)
+	writeJSON(w, http.StatusOK, h.countsOf(view))
 }
 
-// seen serves "Mark all shown as seen" for the repositories the page names.
+// seen serves "Mark all shown as seen" for the repositories the page names,
+// and its Undo, which takes back the marks it wrote for them.
 func (h *handler) seen(w http.ResponseWriter, r *http.Request) {
 	var request struct {
 		Repos []string `json:"repos"`
+		// Undo takes back the marks of "Mark all shown as seen" for the
+		// repositories, those whose answer is still that mark; Batch is what
+		// it answered.
+		Undo  bool `json:"undo"`
+		Batch *int `json:"batch"`
 		// Day and Latest name the page, as for a mark.
 		Day    string `json:"day"`
 		Latest bool   `json:"latest"`
@@ -506,18 +544,42 @@ func (h *handler) seen(w http.ResponseWriter, r *http.Request) {
 		}
 		repos = append(repos, repo)
 	}
-	marked, err := h.Service.MarkSeen(repos, at.scope())
-	if err != nil {
-		writeError(w, http.StatusInternalServerError, "the marks could not be written: "+err.Error())
-		return
+	var marked int
+	var batch *int
+	names := []string{}
+	if request.Undo {
+		if request.Batch == nil {
+			writeError(w, http.StatusBadRequest, "undo needs the batch that Mark all shown as seen answered")
+			return
+		}
+		undone, err := h.Service.UndoSeen(watch.Batch{Repos: repos, From: *request.Batch}, at.scope())
+		if errors.Is(err, watch.ErrInvalid) {
+			writeError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "the marks could not be taken back: "+err.Error())
+			return
+		}
+		marked = undone
+	} else {
+		done, err := h.Service.MarkSeen(repos, at.scope())
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "the marks could not be written: "+err.Error())
+			return
+		}
+		marked, batch = len(done.Repos), &done.From
+		for _, repo := range done.Repos {
+			names = append(names, repo.String())
+		}
 	}
 	view, err := h.viewOf(r.Context(), at, false)
 	if err != nil {
-		writeJSON(w, http.StatusOK, counts{Marked: &marked, Problem: "the marks are written, but the day could not be read: " + err.Error(), Reload: true})
+		writeJSON(w, http.StatusOK, counts{Marked: &marked, Repos: names, Batch: batch, Problem: "the marks are written, but the day could not be read: " + err.Error(), Reload: true})
 		return
 	}
 	answer := h.countsOf(view)
-	answer.Marked = &marked
+	answer.Marked, answer.Repos, answer.Batch = &marked, names, batch
 	writeJSON(w, http.StatusOK, answer)
 }
 
@@ -540,16 +602,41 @@ func (h *handler) refresh(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, answer)
 }
 
-// bookmarks serves the export: it reads the marks and writes nothing.
+// bookmarks serves the export: by default the bookmarks that no note of the
+// vault names yet, with all=true every bookmark. It reads the marks and
+// writes nothing.
 func (h *handler) bookmarks(w http.ResponseWriter, r *http.Request) {
-	format := r.URL.Query().Get("format")
+	query := r.URL.Query()
+	format := query.Get("format")
 	if format == "" {
 		format = FormatURLs
+	}
+	var all bool
+	switch query.Get("all") {
+	case "", "false":
+	case "true":
+		all = true
+	default:
+		writeError(w, http.StatusBadRequest, fmt.Sprintf("all %q: want true or false", query.Get("all")))
+		return
+	}
+	if format != FormatURLs && format != FormatJSONL {
+		writeError(w, http.StatusBadRequest, fmt.Sprintf("format %q: want %s or %s", format, FormatURLs, FormatJSONL))
+		return
+	}
+	list := h.Service.Bookmarks()
+	if !all {
+		pending, err := h.Service.Pending(r.Context())
+		if err != nil {
+			writeError(w, http.StatusServiceUnavailable, err.Error()+"; the bookmarks that have a note cannot be told apart: pulsectl bookmarks --all prints every bookmark")
+			return
+		}
+		list = pending
 	}
 	var buffer bytes.Buffer
 	switch format {
 	case FormatURLs:
-		for _, bookmark := range h.Service.Bookmarks() {
+		for _, bookmark := range list {
 			buffer.WriteString(bookmark.Repo.URL())
 			buffer.WriteByte('\n')
 		}
@@ -557,7 +644,7 @@ func (h *handler) bookmarks(w http.ResponseWriter, r *http.Request) {
 	case FormatJSONL:
 		encoder := json.NewEncoder(&buffer)
 		encoder.SetEscapeHTML(false)
-		for _, bookmark := range h.Service.Bookmarks() {
+		for _, bookmark := range list {
 			lists := bookmark.Lists
 			if lists == nil {
 				lists = []string{}
@@ -592,12 +679,17 @@ type Bookmark struct {
 type counts struct {
 	New    int `json:"new"`
 	Hidden int `json:"hidden"`
-	// Card is the card of the marked repository as the hidden view shows it.
-	Card string `json:"card,omitempty"`
 	// Empty is what the page says in place of the cards when none is new.
 	Empty string `json:"empty,omitempty"`
-	// Marked is the number of repositories "Mark all shown as seen" marked.
+	// Marked is the number of repositories "Mark all shown as seen" marked,
+	// or its Undo took back.
 	Marked *int `json:"marked,omitempty"`
+	// Repos names the repositories "Mark all shown as seen" marked, for its
+	// Undo.
+	Repos []string `json:"repos,omitempty"`
+	// Batch tells the marks of this "Mark all shown as seen" from later ones,
+	// for its Undo.
+	Batch *int `json:"batch,omitempty"`
 	// Failed and Loaded count the lists after a refresh.
 	Failed *int `json:"failed,omitempty"`
 	Loaded *int `json:"loaded,omitempty"`

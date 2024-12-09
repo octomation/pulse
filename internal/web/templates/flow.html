@@ -20,13 +20,13 @@
 <p class="flow-note" role="alert" data-reservation>{{.}}</p>
 {{- end}}
 
-<main class="flow-stage" id="flow-stage">
+<main class="flow-stage" id="flow-stage" tabindex="-1">
   {{- range $i, $c := .Flow}}
   <article class="flow-card" data-repo="{{.Key}}" data-name="{{.Repo}}" data-place="{{$i}}"{{if $i}} hidden{{end}}>
     <p class="kicker">{{.Language}}{{if and .Language (gt (len .Lists) 1)}} <i>·</i> {{end}}{{among (len .Lists)}}</p>
-    <h2 class="card-name"><a href="{{.Repo.URL}}" data-action="read" rel="noopener noreferrer"><span class="owner">{{.Repo.Owner}}</span><span class="slash">/</span><span class="name">{{.Repo.Name}}</span></a></h2>
+    <h2 class="card-name"><a href="{{.Repo.URL}}" target="_blank" rel="noopener noreferrer"><span class="owner">{{.Repo.Owner}}</span><span class="slash">/</span><span class="name">{{.Repo.Name}}</span></a></h2>
     {{- if .Description}}
-    <p class="description" data-action="read">{{.Description}}</p>
+    <p class="description">{{.Description}}</p>
     {{- end}}
     <ul class="badges">
       {{- range .Lists}}
@@ -43,22 +43,26 @@
     <div data-empty="{{.Empty.Kind}}"><h2>{{.Empty.Title}}</h2>
     <p>{{.Empty.Text}}</p></div>
     {{- end}}
-    <p><a class="button primary" href="{{.Base}}" data-flow="page">Back to the page</a></p>
+    <p>{{if .Flow}}<button type="button" class="button" data-answer="back" title="The last card (↑)">↑ Back</button> {{end}}<a class="button primary" href="{{.Base}}" data-flow="page">Back to the page</a></p>
   </section>
 </main>
 
 <footer class="flow-bar" id="flow-bar"{{if not .Flow}} hidden{{end}}>
   <p class="flow-error" id="flow-error" role="alert" hidden></p>
-  <form class="flow-form" id="flow-form">
-    <input type="text" name="comment" maxlength="500" autocomplete="off" placeholder="Why it is interesting (optional)" aria-label="Comment">
+  <form class="flow-form" id="flow-form" hidden>
+    <input type="text" name="comment" maxlength="500" autocomplete="off" placeholder="Why it is interesting (optional): Enter answers Interesting, Esc closes" aria-label="Comment">
   </form>
   <div class="flow-answers">
     <button type="button" class="button" data-answer="skip" data-key="ArrowLeft" title="Mark as seen (←, swipe left)">← Skip</button>
     <button type="button" class="button" data-answer="later" data-key="ArrowDown" title="Decide later (↓)">↓ Later</button>
+    <button type="button" class="button" data-answer="back" data-key="ArrowUp" title="The previous card, to change its answer (↑)" disabled>↑ Back</button>
     <button type="button" class="button primary" data-answer="interesting" data-key="ArrowRight" title="Bookmark (→, swipe right)">Interesting →</button>
   </div>
+  <div class="flow-tools">
+    <button type="button" class="flow-comment" data-action="comment" data-key="c" title="Add a comment to Interesting (c)">Comment <kbd>c</kbd></button>
+    <button type="button" class="flow-comment" data-answer="clear" data-key="u" title="Take back the answer of this card: it is new again (u)" disabled>Take back <kbd>u</kbd></button>
+  </div>
 </footer>
-{{template "reader-panel"}}
 
 </body>
 </html>

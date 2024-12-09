@@ -66,12 +66,16 @@ type Membership struct {
 	Rank int
 }
 
-// SeenReason hides a repository that was marked. A bookmark hides it for
-// good, since the first "Interesting"; "Skip" and "Mark all shown as seen"
-// snooze it until the period of the last of them ends.
+// SeenReason hides a repository that was marked: its last answer. A
+// bookmark hides it while it is the answer, since the first "Interesting" of
+// the run; "Skip" and "Mark all shown as seen" snooze it until the period of
+// the last of them ends.
 type SeenReason struct {
 	At     time.Time
 	Action store.Action
+	// Line is the place of the mark in marks.jsonl, as store.Standing has
+	// it.
+	Line int
 	// Until is the end of the snooze; zero for good.
 	Until time.Time
 }
@@ -97,7 +101,22 @@ type Card struct {
 	Seen     *SeenReason
 	Bookmark *BookmarkReason
 	Reasons  []hide.Reason
+	// Lapsed is the last answer when it is a snooze that ended: it hides
+	// nothing, and the reader says when the repository was skipped.
+	Lapsed *SeenReason
 }
+
+// Answer is the answer the repository has in pulse: interesting, skip or
+// seen, empty when it has none or its snooze ended.
+func (c Card) Answer() store.Action {
+	if c.Seen == nil {
+		return ""
+	}
+	return c.Seen.Action
+}
+
+// InNotes reports whether a source such as the vault holds the repository.
+func (c Card) InNotes() bool { return len(c.Reasons) > 0 }
 
 // Key identifies the card: owner/name without case.
 func (c Card) Key() string { return c.Repo.Key() }
@@ -337,6 +356,7 @@ func (s *Service) fill(ctx context.Context, view *View, snapshots []trend.Snapsh
 		card := &view.Cards[i]
 		card.Seen = marks.seen[card.Key()]
 		card.Bookmark = marks.bookmarks[card.Key()]
+		card.Lapsed = marks.lapsed[card.Key()]
 		card.Reasons = reasons[i]
 	}
 }
@@ -347,35 +367,30 @@ type marked struct {
 	seen map[string]*SeenReason
 	// bookmarks holds the bookmarked repositories.
 	bookmarks map[string]*BookmarkReason
+	// lapsed holds the repositories whose last answer is a snooze that
+	// ended.
+	lapsed map[string]*SeenReason
 }
 
-// marks reads the marks as they stand at now. "Interesting" bookmarks a
-// repository for good, with the comment of its last mark; "Skip" and "Mark
-// all shown as seen" snooze it for the period from the last of them, and a
-// snooze that ended hides nothing.
+// marks reads the answers as they stand at now: the last mark of each
+// repository counts. "Interesting" bookmarks it with the comment of its last
+// mark; "Skip" and "Mark all shown as seen" snooze it for the period from
+// that mark, and a snooze that ended hides nothing; a taken-back answer is
+// none.
 func (s *Service) marks(now time.Time) marked {
-	m := marked{seen: map[string]*SeenReason{}, bookmarks: map[string]*BookmarkReason{}}
-	last := map[string]store.Mark{}
-	for _, mark := range s.store.Marks() {
-		key := mark.Repo.Key()
-		if mark.Action != store.Interesting {
-			if previous, found := last[key]; !found || !mark.Time.Before(previous.Time) {
-				last[key] = mark
-			}
+	m := marked{seen: map[string]*SeenReason{}, bookmarks: map[string]*BookmarkReason{}, lapsed: map[string]*SeenReason{}}
+	for _, standing := range s.store.Standings() {
+		key := standing.Repo.Key()
+		if standing.Action == store.Interesting {
+			m.bookmarks[key] = &BookmarkReason{At: standing.At, Comment: standing.Comment}
+			m.seen[key] = &SeenReason{At: standing.At, Action: standing.Action, Line: standing.Line}
 			continue
 		}
-		if m.bookmarks[key] == nil {
-			m.bookmarks[key] = &BookmarkReason{At: mark.Time}
-			m.seen[key] = &SeenReason{At: mark.Time, Action: mark.Action}
-		}
-		m.bookmarks[key].Comment = mark.Comment
-	}
-	for key, mark := range last {
-		if m.seen[key] != nil {
-			continue
-		}
-		if until := s.snooze.After(mark.Time, s.location); now.Before(until) {
-			m.seen[key] = &SeenReason{At: mark.Time, Action: mark.Action, Until: until}
+		reason := &SeenReason{At: standing.At, Action: standing.Action, Until: s.snooze.After(standing.At, s.location), Line: standing.Line}
+		if now.Before(reason.Until) {
+			m.seen[key] = reason
+		} else {
+			m.lapsed[key] = reason
 		}
 	}
 	return m

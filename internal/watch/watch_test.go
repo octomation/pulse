@@ -162,7 +162,7 @@ func TestMarks(t *testing.T) {
 			{Owner: "owner", Name: "github-weekly"},     // new
 		}, Scope{})
 		require.NoError(t, err)
-		assert.Equal(t, 2, marked)
+		assert.Equal(t, []trend.Repo{{Owner: "owner", Name: "trendshift-weekly"}, {Owner: "owner", Name: "github-weekly"}}, marked.Repos)
 		marks := f.store.Marks()
 		require.Len(t, marks, before+2)
 		assert.Equal(t, store.Mark{
@@ -172,7 +172,7 @@ func TestMarks(t *testing.T) {
 
 		marked, err = f.service.MarkSeen(nil, Scope{})
 		require.NoError(t, err)
-		assert.Zero(t, marked)
+		assert.Empty(t, marked.Repos)
 	})
 
 	assert.Equal(t, loads, f.loader.Total(), "a mark loads nothing")

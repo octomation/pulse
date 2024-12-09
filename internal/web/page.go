@@ -43,6 +43,9 @@ type page struct {
 	// one section.
 	Sections []section
 	Hidden   []card
+	// Groups lay the hidden cards out by their standing: interesting,
+	// skipped, and in the notes.
+	Groups []section
 	// HiddenCount is the number of hidden cards, rendered or not.
 	HiddenCount int
 	Lists       []watch.ListStatus
@@ -246,6 +249,10 @@ func newCard(c watch.Card) card {
 	return card{Card: c, State: state}
 }
 
+// Snoozed reports whether the answer of the repository is a skip or "Mark
+// all shown as seen" whose snooze runs.
+func (c card) Snoozed() bool { return c.Seen != nil && c.Seen.Action != store.Interesting }
+
 // Comment is the comment the field of the card starts with.
 func (c card) Comment() string {
 	if c.Bookmark != nil {
@@ -271,6 +278,7 @@ func newPage(view watch.View, showHidden bool) page {
 		}
 	}
 	p.HiddenCount = view.HiddenCount()
+	p.Groups = groups(p.Hidden)
 	p.Sections = layout(p.Shown, view.Past())
 	for _, part := range p.Sections {
 		p.Flow = append(p.Flow, part.Cards...)
@@ -291,6 +299,37 @@ func newPage(view watch.View, showHidden bool) page {
 		}
 	}
 	return p
+}
+
+// groups sorts the hidden cards by their standing: what a note holds is in
+// the notes whatever its answer in pulse; the rest is interesting or
+// skipped.
+func groups(hidden []card) []section {
+	parts := []section{
+		{Kind: "interesting", Title: "Interesting", Note: "Marked as interesting, no note yet"},
+		{Kind: "skipped", Title: "Skipped", Note: "Skipped or marked as seen, until the snooze ends"},
+		{Kind: "notes", Title: "In your notes", Note: "A note of the vault names them"},
+	}
+	for _, c := range hidden {
+		switch {
+		case c.InNotes():
+			parts[2].Cards = append(parts[2].Cards, c)
+		case c.Bookmark != nil:
+			parts[0].Cards = append(parts[0].Cards, c)
+		default:
+			parts[1].Cards = append(parts[1].Cards, c)
+		}
+	}
+	return slices.DeleteFunc(parts, func(s section) bool { return len(s.Cards) == 0 })
+}
+
+// queuePage is the queue: the repositories marked as interesting that no
+// note names yet.
+type queuePage struct {
+	Cards []card
+	// Problem says why the notes could not be told apart: the queue then
+	// holds every bookmark.
+	Problem string
 }
 
 func capital(s string) string {

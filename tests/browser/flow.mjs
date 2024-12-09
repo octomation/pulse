@@ -1,6 +1,7 @@
 // Checks flow mode in headless Chrome against a pulse built from this
 // checkout: the keys, the swipes, a failed write, the end of the flow, the
-// reader, and the answers that stay in place for a short and a long card.
+// story on the card, the keys after a click into the README, Back, and the
+// answers that stay in place for a short and a long card.
 //
 //   PLAYWRIGHT_CORE=/path/to/playwright-core/index.js node tests/browser/flow.mjs
 //
@@ -88,6 +89,16 @@ try {
   browser = await chromium.launch({ headless: true })
   const context = await browser.newContext({ viewport: { width: 1100, height: 800 }, hasTouch: true })
   const page = await context.newPage()
+  // The fifth card gets a README frame, as GitHub would give it: the
+  // repositories of the test are not on GitHub.
+  await page.route('**/repos/fifth/swiped', async (route) => {
+    const response = await route.fetch()
+    const story = (await response.text()).replace(/<\/div>\s*$/, '<iframe class="readme" data-story="readme" src="/repos/fifth/swiped/readme" sandbox="allow-popups"></iframe></div>')
+    await route.fulfill({ response, body: story })
+  })
+  await page.route('**/repos/fifth/swiped/readme', (route) => route.fulfill({
+    contentType: 'text/html', body: '<!doctype html><body>' + '<p>The README of the fifth card.</p>'.repeat(40) + '</body>'
+  }))
   await page.goto(`${origin}/flow/`)
 
   const visible = () => page.locator('.flow-card:not([hidden])').getAttribute('data-repo')
@@ -107,13 +118,14 @@ try {
   check(JSON.stringify(await boxes()) === JSON.stringify(short), 'the answers stay in place for a long description')
   if (process.env.SCREENSHOTS) await page.screenshot({ path: join(process.env.SCREENSHOTS, 'flow-long.png') })
 
-  await page.fill('[name="comment"]', 'read it later')
-  await page.keyboard.press('Escape')
-  await page.keyboard.press('ArrowRight')
+  check(await page.locator('#flow-form').isHidden(), 'the comment opens on demand')
+  await page.keyboard.press('c')
+  await page.keyboard.type('read it later')
+  await page.keyboard.press('Enter')
   await page.waitForFunction(() => document.querySelector('.flow-card:not([hidden])')?.dataset.repo === 'third/later')
   const interesting = markLines().at(-1)
   check(interesting?.action === 'interesting' && interesting?.comment === 'read it later', 'right marks it as interesting with the comment')
-  check(await page.inputValue('[name="comment"]') === '', 'the comment field is empty for the next card')
+  check(await page.inputValue('#flow-form [name="comment"]') === '', 'the comment field is empty for the next card')
 
   const before = markLines().length
   // A held key repeats: only the first press answers.
@@ -132,11 +144,46 @@ try {
   await page.keyboard.press('ArrowLeft')
   await page.waitForFunction(() => document.querySelector('.flow-card:not([hidden])')?.dataset.repo === 'fifth/swiped')
 
-  await page.locator('.flow-card:not([hidden]) [data-action="read"]').first().click()
-  await page.locator('#reader:not([hidden]) .story').waitFor()
-  check(await page.locator('#reader .story').getAttribute('data-repo') === 'fifth/swiped', 'the reader opens from the card')
+  await page.locator('.flow-card:not([hidden]) .story iframe.readme').waitFor()
+  check(await page.locator('.flow-card:not([hidden]) .story').getAttribute('data-repo') === 'fifth/swiped', 'the card holds the story without a click')
+  check(await page.locator('#reader').count() === 0, 'no reader opens over the flow')
+  await page.frameLocator('.flow-card:not([hidden]) iframe.readme').locator('p').first().click()
+  await page.waitForFunction(() => document.activeElement?.id === 'flow-stage')
+  check(true, 'a click into the README gives the keys back to the flow')
+
+  await page.keyboard.press('ArrowUp')
+  await page.waitForFunction(() => document.querySelector('.flow-card:not([hidden])')?.dataset.repo === 'fourth/fails')
+  await page.locator('.flow-card:not([hidden]) [data-stamp="skip"]').waitFor()
+  check(await page.locator('.flow-bar [data-answer="skip"]').getAttribute('aria-pressed') === 'true', 'up goes back to the previous card, with its answer')
+  const current = (repo) => page.waitForFunction((r) => document.querySelector('.flow-card:not([hidden])')?.dataset.repo === r, repo)
+  await page.keyboard.press('ArrowUp')
+  await current('third/later')
+  // The story of the bookmark comes back slowly: the bar goes by the answer
+  // this flow wrote until it arrives.
+  let release
+  const held = new Promise((resolve) => { release = resolve })
+  await page.route('**/repos/second/long', async (route) => { await held; await route.continue() })
+  await page.keyboard.press('ArrowUp')
+  await current('second/long')
+  check(await page.locator('.flow-bar [data-answer="interesting"]').getAttribute('aria-pressed') === 'true', 'the bookmark shows its answer after Back, before its story is back')
+  await page.keyboard.press('c')
+  check(await page.inputValue('#flow-form [name="comment"]') === 'read it later', 'and keeps its comment')
   await page.keyboard.press('Escape')
-  check(await page.locator('#reader').isHidden() && await visible() === 'fifth/swiped', 'and returns to the same card')
+  const kept = markLines().length
+  await page.keyboard.press('ArrowRight')
+  await current('third/later')
+  check(markLines().length === kept, 'the same answer again writes nothing')
+  release()
+  await page.unroute('**/repos/second/long')
+  await page.keyboard.press('ArrowDown')
+  await current('fourth/fails')
+  await page.keyboard.press('u')
+  await page.waitForFunction(() => document.querySelector('.flow-card:not([hidden]) .story') && !document.querySelector('.flow-card:not([hidden]) [data-stamp]'))
+  check(markLines().at(-1)?.repo.name === 'fails' && markLines().at(-1)?.action === 'clear' && await visible() === 'fourth/fails',
+    'u takes the answer back and the card stays')
+  await page.keyboard.press('ArrowRight')
+  await current('fifth/swiped')
+  check(markLines().at(-1)?.repo.name === 'fails' && markLines().at(-1)?.action === 'interesting', 'another answer replaces it')
 
   await page.evaluate(() => {
     const stage = document.getElementById('flow-stage')

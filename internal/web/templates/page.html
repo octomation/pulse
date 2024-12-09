@@ -49,6 +49,7 @@
   <nav class="controls">
     <a class="switch" role="switch" aria-checked="{{if .ShowHidden}}true{{else}}false{{end}}" data-action="toggle-hidden" href="{{.Base}}{{if not .ShowHidden}}hidden/{{end}}"><span class="knob" aria-hidden="true"></span>Show hidden</a>
     <a class="button" data-action="flow" href="{{.Base}}flow/" title="One card at a time">Flow</a>
+    <a class="button" data-action="queue" href="/queue/" title="Marked as interesting, no note yet">Queue</a>
     {{- if .Today}}
     <button type="button" class="button" data-action="refresh" title="Load all six lists now">Refresh</button>
     {{- end}}
@@ -116,14 +117,18 @@
   </div>
 
   {{- if .ShowHidden}}
-  <section class="section is-hidden-part" aria-label="Hidden repositories">
-    <header class="section-head"><h2>Hidden</h2><p>Seen, bookmarked or in the vault</p></header>
-    <div class="cards" id="hidden">
-      {{- range .Hidden}}
-      {{template "card" .}}
-      {{- end}}
-    </div>
-  </section>
+  <div id="hidden">
+    {{- range .Groups}}
+    <section class="section is-hidden-part" data-group="{{.Kind}}" aria-label="{{.Title}}">
+      <header class="section-head"><h2>{{.Title}}</h2><p>{{.Note}}</p></header>
+      <div class="cards">
+        {{- range .Cards}}
+        {{template "card" .}}
+        {{- end}}
+      </div>
+    </section>
+    {{- end}}
+  </div>
   {{- end}}
 </main>
 
@@ -153,6 +158,15 @@
   <p>{{.Text}}</p>
 </section>
 {{- end}}
+{{- define "standing"}}
+  {{- if .InNotes}}
+  <p class="stamp is-notes" data-stamp="notes">In your notes</p>
+  {{- else if .Bookmark}}
+  <p class="stamp is-interesting" data-stamp="interesting">★ Interesting</p>
+  {{- else if .Seen}}
+  <p class="stamp is-snoozed" data-stamp="{{.Seen.Action}}">{{if eq .Seen.Action "seen"}}Seen{{else}}Skipped{{end}} · until <time datetime="{{stamp .Seen.Until}}">{{date .Seen.Until}}</time></p>
+  {{- end}}
+{{- end}}
 {{- define "reasons"}}
   <ul class="reasons">
     {{- with .Seen}}
@@ -181,7 +195,10 @@
     {{- end}}
   </ul>
   {{- if eq .State "hidden"}}
-  {{template "reasons" .}}
+  <div class="standing">
+  {{- template "standing" .}}
+  {{- template "reasons" .}}
+  </div>
   {{- end}}
 </article>
 {{- end}}

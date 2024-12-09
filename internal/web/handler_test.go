@@ -112,7 +112,11 @@ func TestVaultAndMonthOldSeenStayHidden(t *testing.T) {
 
 	hidden := s.open("/hidden/")
 	assert.Equal(t, []string{"anthropics/claude-code"}, hidden.keys("shown"))
-	assert.Equal(t, []string{"snouzy/workout-cool", "tailscale/tailscale", "astral-sh/uv"}, hidden.keys("hidden"))
+	// The hidden view groups them: skipped first, then what the notes hold.
+	assert.Equal(t, []string{"tailscale/tailscale", "snouzy/workout-cool", "astral-sh/uv"}, hidden.keys("hidden"))
+	assert.Contains(t, hidden.html, `data-group="skipped"`)
+	assert.Contains(t, hidden.html, `data-group="notes"`)
+	assert.NotContains(t, hidden.html, `data-group="interesting"`, "an empty group is not on the page")
 
 	byURL := hidden.card(t, "snouzy/workout-cool")
 	assert.Equal(t, map[string]string{"vault": "In the vault: workout-cool.md"}, byURL.reasons)
@@ -455,12 +459,10 @@ func TestInterestingCreatesBookmark(t *testing.T) {
 	require.Equal(t, http.StatusOK, response.Code, response.Body.String())
 	var answer struct {
 		New, Hidden int
-		Card        string
 	}
 	require.NoError(t, json.Unmarshal(response.Body.Bytes(), &answer))
 	assert.Equal(t, 9, answer.New)
 	assert.Equal(t, 1, answer.Hidden)
-	assert.Contains(t, answer.Card, `data-repo="ghostty-org/ghostty" data-state="hidden"`)
 
 	s.clock.Advance(10 * time.Minute)
 	require.Equal(t, http.StatusOK, s.mark("interesting", "zed-industries/zed", "").Code)
@@ -515,7 +517,8 @@ func TestInterestingCreatesBookmark(t *testing.T) {
 		assert.Equal(t, map[string]string{"seen": "Skipped on Nov 18, 2026, until Feb 18, 2027"}, card.reasons)
 		story := s.get("/repos/ollama/ollama").Body.String()
 		assert.Contains(t, story, `data-action="interesting"`, "the reader rescues it")
-		assert.NotContains(t, story, `data-action="skip"`)
+		assert.Contains(t, story, `data-action="skip" aria-pressed="true" disabled`, "the answer it has is pressed")
+		assert.Contains(t, story, `data-action="clear"`, "and can be taken back")
 
 		require.Equal(t, http.StatusOK, s.mark("interesting", "ollama/ollama", "after all").Code)
 		urls, _ = export()

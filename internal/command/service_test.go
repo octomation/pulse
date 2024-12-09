@@ -211,6 +211,28 @@ func TestBookmarksThroughTheCommands(t *testing.T) {
 	export(service.addr)
 	export(service.loopback())
 
+	// A bookmark that a note of the vault names has its note: only --all
+	// prints it.
+	status, body = request(t, http.MethodPost, service.loopback()+"/api/marks",
+		`{"action":"interesting","repo":"ollama/ollama","comment":""}`)
+	require.Equal(t, http.StatusOK, status, body)
+	export(service.addr)
+	stdout, stderr, err := client(t, "bookmarks", "--all", "--addr", service.addr)
+	require.NoError(t, err, stderr)
+	assert.Equal(t, wantURLs+"https://github.com/ollama/ollama\n", stdout)
+
+	// Without the vault the command cannot tell the bookmarks with a note:
+	// it fails and says so, and --all still prints every bookmark.
+	require.NoError(t, os.Rename(vault, vault+".away"))
+	_, stderr, err = client(t, "bookmarks", "--addr", service.addr)
+	require.Error(t, err)
+	assert.Contains(t, stderr, "the vault could not be read")
+	assert.Contains(t, stderr, "pulsectl bookmarks --all prints every bookmark")
+	stdout, stderr, err = client(t, "bookmarks", "--all", "--addr", service.addr)
+	require.NoError(t, err, stderr)
+	assert.Equal(t, wantURLs+"https://github.com/ollama/ollama\n", stdout)
+	require.NoError(t, os.Rename(vault+".away", vault))
+
 	require.NoError(t, service.stop(), "the service stops cleanly")
 
 	t.Run("without a running service the client says so", func(t *testing.T) {

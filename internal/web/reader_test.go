@@ -118,12 +118,15 @@ func TestReaderWithoutGitHub(t *testing.T) {
 	assert.Contains(t, story, `data-action="skip"`)
 	assert.NotContains(t, story, "<iframe")
 
-	// A hidden repository keeps its reasons in the reader, and has no Skip.
+	// A hidden repository keeps its reasons in the reader, with the answer
+	// it has pressed, and Take back.
 	require.Equal(t, 200, s.mark("skip", "ghostty-org/ghostty", "").Code)
 	story = s.get("/repos/ghostty-org/ghostty").Body.String()
 	assert.Contains(t, story, `data-state="hidden"`)
 	assert.Contains(t, story, `data-reason="seen"`)
-	assert.NotContains(t, story, `data-action="skip"`)
+	assert.Contains(t, story, `data-stamp="skip">Skipped · until`)
+	assert.Contains(t, story, `data-action="skip" aria-pressed="true" disabled`)
+	assert.Contains(t, story, `data-action="clear"`)
 
 	// Without anybody to ask, the reader says so.
 	s.github = nil
