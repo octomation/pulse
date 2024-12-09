@@ -1,6 +1,8 @@
 /* The landing page: a calm morning paper. Serif headlines, soft paper tones,
    and motion that breathes rather than blinks. */
 .pulse-home { --serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, ui-serif, serif; --display: 'New York', 'Iowan Old Style', Georgia, ui-serif, serif; --mono: ui-monospace, SFMono-Regular, Menlo, monospace; max-width: 1180px; margin: 0 auto; padding: 18px 12px 40px; }
+/* The desk of the first screen reaches into the margin of the page on purpose. The overflow of body goes to the window, which hides what passes its right edge: no sideways scroll, the vertical one and the sticky desk stay. */
+body:has(.pulse-home) { overflow-x: clip; }
 .pulse-home a { text-decoration: none; }
 .pulse-home h1, .pulse-home h2, .pulse-home h3 { font-family: var(--display); border: none; padding: 0; color: var(--ink); }
 .pulse-home .eyebrow { color: var(--accent); }
@@ -281,7 +283,7 @@
 .pulse-install-note { grid-column: 1 / -1; margin: 0 !important; font: 13px/1.6 -apple-system, sans-serif !important; }
 
 @media (max-width: 960px) {
-  .pulse-feature, .pulse-install, .pulse-shots { grid-template-columns: 1fr; gap: 32px; }
+  .pulse-feature, .pulse-install, .pulse-shots { grid-template-columns: minmax(0, 1fr); gap: 32px; }
   .pulse-feature.is-flipped > :first-child { order: 0; }
   .calm-grid { grid-template-columns: 1fr 1fr; }
   .pulse-scope { grid-template-columns: 1fr; }
