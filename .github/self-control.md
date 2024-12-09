@@ -17,10 +17,12 @@ come from those two repositories, adapted to two binaries and no agent skill.
   GO-2026-6225 and GO-2026-5932, which have none (`Fixed in: N/A`), so the
   workflow is red on `main`. Look at its last run before the next release;
   once one of them names a fixed version, update that module in `tools/`.
-- [ ] **Before the next release**: Dependabot has open alerts for
-  `docs/package-lock.json` (zod, minimatch, katex) and `tools/go.mod`
-  (go.opentelemetry.io/otel). None is in the binaries. Update the
-  packages, then check that `make go-tools-check` and the site build pass.
+- [ ] **When Nextra releases after 4.6.1**: the Dependabot alerts for zod,
+  minimatch and katex in `docs/package-lock.json` are dismissed, as in
+  those two repositories, because the static build never feeds them
+  untrusted input; `docs/README.md` gives the reasons. Once a release ships
+  shuding/nextra#4990, move the zod override as `docs/README.md` says,
+  check the static export, and reopen any alert the upgrade still leaves.
 - [ ] **After the push**: `gh workflow run cd.yml -f reason="snapshot"` on
   `main` builds a snapshot of both binaries and publishes nothing.
 
