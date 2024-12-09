@@ -1,6 +1,6 @@
 # pulse documentation
 
-An English site for pulse v0.2.0: a landing page with an isometric morning desk that plays as the page scrolls, the trend-watch guide and the changelog. Nextra 4 on Next.js, the stack shared with octopot/indexit and octomation/maintainer.
+An English site for pulse v0.2.1: a landing page with an isometric morning desk that plays as the page scrolls, the trend-watch guide and the changelog. Nextra 4 on Next.js, the stack shared with octopot/indexit and octomation/maintainer.
 
 ## Run locally
 
@@ -41,7 +41,8 @@ Static output is written to `docs/dist/`. `SITE_URL` is required; add `BASE_PATH
 | `components/reveal.jsx` | Fades a block in when it scrolls into view |
 | `content/trend-watch.md` | Trend watch: install, the page, the reader, the export and the limits |
 | `content/changelog/index.mdx` | Release overview |
-| `content/changelog/v0.2.0.md` | The latest release notes, also the GitHub release body |
+| `content/changelog/v0.2.1.md` | The latest release notes, also the GitHub release body |
+| `content/changelog/v0.2.0.md` | The notes of the calendar and flow mode release |
 | `content/changelog/v0.1.1.md` | The notes of the background service release |
 | `content/changelog/v0.1.0.md` | The notes of the first release |
 | `content/**/_meta.js` | Navigation order and labels |
@@ -68,7 +69,7 @@ Changelog is a section of the sidebar, with All releases first. `navigation.mjs`
 PLAYWRIGHT_CORE=/path/to/playwright-core/index.js node scripts/og.mjs
 ```
 
-The version label `v0.2.0` is set in `ui-monospace` (Menlo on macOS), weight 600, 26 px, colour `#b0513a`; its box is x 96, y 818, 94×26 px. A release changes only the text of `.version` in `og.html` and renders again; the script prints the box of the label. Compare the result with the previous image: only the pixels inside that box may change, so a longer version that widens the box needs the same check. When the desk changes, copy `.iso-stage` from `dist/index.html` again and set the time on the clock to the step shown.
+The version label `v0.2.1` is set in `ui-monospace` (Menlo on macOS), weight 600, 26 px, colour `#b0513a`; its box is x 96, y 818, 94×26 px. A release changes only the text of `.version` in `og.html` and renders again; the script prints the box of the label. Compare the result with the previous image: only the pixels inside that box may change, so a longer version that widens the box needs the same check. When the desk changes, copy `.iso-stage` from `dist/index.html` again and set the time on the clock to the step shown.
 
 ## Change the domain
 

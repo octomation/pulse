@@ -127,23 +127,23 @@ $ pulsectl bookmarks --all                   # every bookmark, as before
 
 ## Acceptance criteria
 
-- [ ] Test: the flow card holds the facts and the README of the repository,
+- [x] Test: the flow card holds the facts and the README of the repository,
   and the flow page has no reader panel.
-- [ ] Test: the last answer wins, Take back makes a repository new, and a
+- [x] Test: the last answer wins, Take back makes a repository new, and a
   repeated answer writes nothing.
-- [ ] Test: the stamps of Interesting, Skipped, Seen and In your notes, and
+- [x] Test: the stamps of Interesting, Skipped, Seen and In your notes, and
   the hidden page grouped under them.
-- [ ] Test: a repository a note names has no Interesting and no Skip in the
+- [x] Test: a repository a note names has no Interesting and no Skip in the
   reader.
-- [ ] Test: Undo after "Mark all shown as seen" takes back exactly its marks.
-- [ ] Test: `pulsectl bookmarks` leaves out a bookmark with a note, `--all`
+- [x] Test: Undo after "Mark all shown as seen" takes back exactly its marks.
+- [x] Test: `pulsectl bookmarks` leaves out a bookmark with a note, `--all`
   keeps it, and an unreadable vault fails the command.
-- [ ] Test: `/queue/` lists a bookmark that left the lists, and Take back
+- [x] Test: `/queue/` lists a bookmark that left the lists, and Take back
   removes it.
-- [ ] Checked in a browser: ← → ↓ ↑ answer after a click into the README; ↑
+- [x] Checked in a browser: ← → ↓ ↑ answer after a click into the README; ↑
   shows the previous answer and its comment, another key replaces it, and
   `u` takes it back.
-- [ ] The guide in `docs/content/` describes the stamps, Take back, Undo, ↑,
+- [x] The guide in `docs/content/` describes the stamps, Take back, Undo, ↑,
   the queue and the new default of `pulsectl bookmarks`.
 
 ## Out of scope
