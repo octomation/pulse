@@ -36,3 +36,12 @@ come from those two repositories, adapted to two binaries and no agent skill.
   When a list still has such a repository, it is on the page again, and
   **Show hidden** no longer lists it. If it stays hidden, file a bug
   against the snooze of a seen mark.
+
+### v0.2.1
+
+- [ ] **The morning after `/bookmark-it` turns the queue into notes**:
+  `pulsectl bookmarks` prints only the interest without a note, so the
+  repositories that got a note leave it, and `/queue/` is shorter by the
+  same ones. If a noted repository stays, check that its note names it in
+  `url` or `aliases`; if it does, file a bug against the export of pending
+  bookmarks.

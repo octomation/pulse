@@ -13,7 +13,7 @@ shortDescription: "OctoLab Platform development."
 public: true
 closed: false
 createdAt: 2022-05-07T06:25:58Z
-updatedAt: 2026-11-23T19:25:26Z
+updatedAt: 2026-11-23T19:53:09Z
 closedAt: null
 ---
 
@@ -43,8 +43,6 @@ closedAt: null
 
 > state: OPEN
 
-- [ ] [[PUL-13]] — web: decide, see and take back without leaving the flow
-
 ## Done
 
 > state: CLOSED · stateReason: COMPLETED
@@ -56,6 +54,7 @@ closedAt: null
 - [x] [[PUL-5]] — core: trend-watch without repeats
 - [x] [[PUL-10]] — web: flow mode, one card at a time
 - [x] [[PUL-11]] — web: a front page grid without holes
+- [x] [[PUL-13]] — web: decide, see and take back without leaving the flow
 
 ## Won't do
 

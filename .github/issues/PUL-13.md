@@ -7,22 +7,22 @@ url: https://github.com/octomation/pulse/issues/100
 title: "web: decide, see and take back without leaving the flow"
 issueType: Feature
 labels:
-  - "effort: medium"
-  - "impact: high"
-  - "scope: code"
   - "type: improvement"
+  - "scope: code"
+  - "impact: high"
+  - "effort: medium"
 assignees:
   - kamilsk
-milestone: "[[PUL-M3]]"
+milestone: "[[PUL-M2]]"
 parent: null
 issueFields: {}
-state: OPEN
-stateReason: null
+state: CLOSED
+stateReason: COMPLETED
 duplicateOf: null
 createdAt: 2026-11-23T19:24:34Z
-updatedAt: 2026-11-23T19:24:34Z
-lastEditedAt: null
-closedAt: null
+updatedAt: 2026-11-23T20:00:25Z
+lastEditedAt: 2026-11-23T19:52:58Z
+closedAt: 2026-11-23T19:53:07Z
 ---
 
 # web: decide, see and take back without leaving the flow
@@ -151,3 +151,7 @@ $ pulsectl bookmarks --all                   # every bookmark, as before
 - What happens to a note when its interest is taken back.
 - A flow over the hidden repositories.
 - Sources other than GitHub.
+
+<!-- 2026-11-23T19:53Z https://github.com/octomation/pulse/issues/100#issuecomment-7112246599
+Delivered in [v0.2.1](https://github.com/octomation/pulse/releases/tag/v0.2.1).
+-->
