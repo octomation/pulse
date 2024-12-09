@@ -11,6 +11,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -272,8 +273,14 @@ func Clean(rendered []byte, repo trend.Repo) string {
 			name := strings.ToLower(attr.Key)
 			switch {
 			case strings.HasPrefix(name, "on"), name == "style", name == "srcdoc", name == "target", name == "rel",
-				name == "srcset", name == "formaction", name == "ping":
+				name == "formaction", name == "ping":
 				continue
+			case name == "srcset":
+				// A <picture> of GitHub, light and dark, names its
+				// pictures here only.
+				if attr.Val = sources(attr.Val, files); attr.Val == "" {
+					continue
+				}
 			case name == "href":
 				if attr.Val = address(attr.Val, pages); attr.Val == "" {
 					continue
@@ -288,6 +295,9 @@ func Clean(rendered []byte, repo trend.Repo) string {
 		if n.DataAtom == atom.A {
 			attrs = append(attrs, html.Attribute{Key: "target", Val: "_blank"},
 				html.Attribute{Key: "rel", Val: "noopener noreferrer nofollow"})
+		}
+		if n.DataAtom == atom.Img {
+			attrs = fallback(attrs, files)
 		}
 		n.Attr = attrs
 	}
@@ -304,6 +314,49 @@ func Clean(rendered []byte, repo trend.Repo) string {
 		}
 	}
 	return strings.TrimSpace(out.String())
+}
+
+// sources resolves every picture of a srcset as address does, and keeps the
+// width or density of each; it drops a picture whose address it does not
+// keep.
+func sources(value string, base *url.URL) string {
+	var kept []string
+	for _, candidate := range strings.Split(value, ",") {
+		fields := strings.Fields(candidate)
+		if len(fields) == 0 {
+			continue
+		}
+		if fields[0] = address(fields[0], base); fields[0] != "" {
+			kept = append(kept, strings.Join(fields, " "))
+		}
+	}
+	return strings.Join(kept, ", ")
+}
+
+// fallback does what the script of GitHub does for a picture its proxy
+// cannot fetch, marked with the class js-gh-image-fallback: it shows the
+// picture from its own address, data-canonical-src.
+func fallback(attrs []html.Attribute, base *url.URL) []html.Attribute {
+	var canonical string
+	marked := false
+	for _, attr := range attrs {
+		switch strings.ToLower(attr.Key) {
+		case "data-canonical-src":
+			canonical = address(attr.Val, base)
+		case "class":
+			marked = slices.Contains(strings.Fields(attr.Val), "js-gh-image-fallback")
+		}
+	}
+	if !marked || canonical == "" {
+		return attrs
+	}
+	for i := range attrs {
+		if strings.EqualFold(attrs[i].Key, "src") {
+			attrs[i].Val = canonical
+			return attrs
+		}
+	}
+	return append(attrs, html.Attribute{Key: "src", Val: canonical})
 }
 
 // address resolves a link of a README against base and keeps it only when

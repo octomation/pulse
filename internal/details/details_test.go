@@ -113,15 +113,38 @@ func TestClean(t *testing.T) {
 		`<form action="/x"><input></form><a href="/o/n/issues" target="_self">i</a><a href="data:text/html,x">d</a>`+
 		`<img src="docs/a b.png" srcset="x 2x"><img src="//cdn.example/i.png"><video src="v.mp4" poster="p.png"></video>`+
 		`<a href="https://example.com/a?b=c#d">e</a></div>`), repo)
-	for _, gone := range []string{"style", "onmouseover", "<!--", "iframe", "form", "data:", "srcset", "_self"} {
+	for _, gone := range []string{"style", "onmouseover", "<!--", "iframe", "form", "data:", "_self"} {
 		assert.NotContains(t, got, gone)
 	}
 	for _, kept := range []string{
 		`href="https://github.com/o/n/issues"`, `src="https://github.com/o/n/raw/HEAD/docs/a%20b.png"`,
 		`src="https://cdn.example/i.png"`, `src="https://github.com/o/n/raw/HEAD/v.mp4"`,
 		`poster="https://github.com/o/n/raw/HEAD/p.png"`, `href="https://example.com/a?b=c#d"`,
-		`rel="noopener noreferrer nofollow"`,
+		`rel="noopener noreferrer nofollow"`, `srcset="https://github.com/o/n/raw/HEAD/x 2x"`,
 	} {
 		assert.Contains(t, got, kept)
 	}
+}
+
+// The pictures of a README show as on GitHub: a <picture> names them in
+// srcset, and a picture the proxy of GitHub cannot fetch comes from its own
+// address.
+func TestCleanPictures(t *testing.T) {
+	repo := trend.Repo{Owner: "o", Name: "n"}
+	got := Clean([]byte(`<picture><source media="(prefers-color-scheme: dark)" srcset="https://github.com/user-attachments/assets/dark">`+
+		`<source srcset="light.png 1x, javascript:alert(1) 2x, https://cdn.example/l@2x.png 2x"><img alt="Banner"></picture>`+
+		`<img src="https://camo.githubusercontent.com/abc" data-canonical-src="https://trendshift.io/api/badge/1" class="js-gh-image-fallback">`+
+		`<img src="https://camo.githubusercontent.com/def" data-canonical-src="https://example.com/b.svg">`+
+		`<img src="https://camo.githubusercontent.com/ghi" data-canonical-src="javascript:x" class="js-gh-image-fallback">`), repo)
+	for _, kept := range []string{
+		`srcset="https://github.com/user-attachments/assets/dark"`,
+		`srcset="https://github.com/o/n/raw/HEAD/light.png 1x, https://cdn.example/l@2x.png 2x"`,
+		`<img src="https://trendshift.io/api/badge/1"`,
+		`<img src="https://camo.githubusercontent.com/def"`,
+		`<img src="https://camo.githubusercontent.com/ghi"`,
+	} {
+		assert.Contains(t, got, kept)
+	}
+	assert.NotContains(t, got, "javascript:alert")
+	assert.NotContains(t, got, ` src="javascript`)
 }
